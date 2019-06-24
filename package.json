@@ -1,0 +1,30 @@
+{
+  "name": "arsathai",
+  "version": "0.0.0",
+  "description": "pro1",
+  "author": null,
+  "private": true,
+  "main": "node_modules/expo/AppEntry.js",
+  "dependencies": {
+    "base-64": "^0.1.0",
+    "expo": "^33.0.0",
+    "expo-constants": "^5.0.1",
+    "google-map-react": "^1.1.4",
+    "jquery": "^3.4.1",
+    "mdbreact": "^4.16.0",
+    "native-base": "^2.12.1",
+    "react": "^16.8.3",
+    "react-dom": "^16.8.6",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-33.0.0.tar.gz",
+    "react-native-camera": "^2.10.2",
+    "react-native-camera-roll-picker": "^1.3.0",
+    "react-native-elements": "^1.1.0",
+    "react-native-paper": "^2.15.2",
+    "react-native-popup-menu": "^0.15.6",
+    "react-native-tab-view": "^2.6.1",
+    "react-native-vector-icons": "^6.5.0",
+    "react-navigation": "^3.11.0",
+    "react-router-dom": "^5.0.1",
+    "sha1": "^1.1.1"
+  }
+}
