@@ -7,8 +7,7 @@ export default class App extends React.Component {
   }
 
     async componentDidMount(){ 
-      const {status} = await Permissions.getAsync(Permissions.LOCATION)
-      console.log("ปปปปป");
+      const {status} = await Permissions.getAsync(Permissions.LOCATION) 
         if(status !== 'granted'){
             const {response} = await Permissions.askAsync(Permissions.LOCATION)
         }

@@ -18,8 +18,7 @@ export default class CameraExample extends React.Component {
     if (this.camera) { 
        const options = {  exif: true};
        await this.camera.takePictureAsync(options).then(photo => {
-          photo.exif.Orientation = 1;            
-           console.log(photo);            
+          photo.exif.Orientation = 1;        
            });     
      }
     }

@@ -8,39 +8,49 @@ import {
   Button,
   TouchableHighlight,
   Image,
-  Alert
+  Alert,
+  AsyncStorage
 } from 'react-native'; 
 import { Ionicons } from '@expo/vector-icons';
 import SHA1 from 'sha1'; 
 export default class LoginView extends Component {
 
   constructor(props) {
+    
     super(props);
     this.state = {
       email   : 'admin',
       password: 'computercenter142536',
     }
+    _this = this
   }
   static navigationOptions = { 
     title: 'เข้าสู่ระบบ',
     headerStyle: {
       backgroundColor: '#83c336',
     },
+    headerLeft: (
+      <Ionicons name="md-arrow-round-back" onPress={() => _this.props.navigation.navigate('menu')} size={32} color="white" style={{marginRight:10}} />
+    ),
     headerTintColor: 'white'
   }
 
    onClickListener  = async () => { 
     var _username = this.state.email;
     var _password = this.state.password;
-
     if (_username !== "" && _password !== "") {
-    var hash = SHA1(_password);  
+    var hash = SHA1(_password); 
     fetch("https://www.deqp.go.th/data-center/tsm-auth/?UserId="+_username+"&UserPassword="+hash)
     .then((response) => response.json())
-    .then((responseJson) => {  
-      if(responseJson.userName !== undefined){ 
+    .then((responseJson) => {
+      let datatuser =  {};
+      datatuser.user_id = _username
+      datatuser.datauser =  responseJson
+      
+      if(responseJson.userName !== undefined){   
+        AsyncStorage.setItem("user", JSON.stringify(datatuser));            
         this.props.navigation.navigate('listitem', { user: responseJson })
-
+   
       }
     })
     .catch((error) => {
@@ -49,7 +59,7 @@ export default class LoginView extends Component {
   } 
     
   }
-
+  
   render() {
     return (
       <ScrollView contentContainerStyle={styles.contentContainer}>

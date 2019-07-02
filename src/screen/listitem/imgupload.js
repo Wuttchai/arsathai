@@ -31,8 +31,7 @@ export default class ImagePickerExample extends React.Component {
         this.setState({
             num:images.length,
             image: this.state.image.concat([images.uri])
-        })
-        console.log(images)
+        }) 
   }
   render() {     
     return (      

@@ -13,12 +13,11 @@ export default class TabViewExample extends React.Component {
       { key: 'second', title: 'รอรายงาน' },
       { key: 'third', title: 'ประวัติรายงาน' }
     ],
-    loaded: false,
+
     
     menu:[],
     reportsess:[],
     user:[],
-    datafail:[],
   };
   
   static navigationOptions = ({ navigation }) => {
@@ -41,7 +40,7 @@ export default class TabViewExample extends React.Component {
     AsyncStorage.removeItem('user');
     this.props.navigation.navigate('menu');
   }
-  componentWillMount(){
+ componentWillMount(){
   _this = this;
   let me = this
   let datauser = [];
@@ -55,15 +54,13 @@ export default class TabViewExample extends React.Component {
     } 
  }).done();   
  
- AsyncStorage.getItem("Datafail").then((value) => { 
-   console.log(JSON.parse(value));
-  if(value != null){  
-    me.setState({
-      //datafail:JSON.parse(value)
-    })
+ AsyncStorage.getItem("Datafail").then((value) => {   
+   console.log(value)
+  if(value != null){     
+    
   }
 }).done();  
-setTimeout(() =>  { 
+ 
     fetch("http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/api/api_get_reportcat.php")
     .then((response) => response.json())
     .then((responseJson) => {  
@@ -80,19 +77,18 @@ setTimeout(() =>  {
           })
   })
 
-}, 2000)
+
  }
  
 
 
 
- onClickReport = (reportcat_set, reportname_set, reportcat_id,iconreport) => {
+ onClickReport = (reportcat_set, reportname_set, reportcat_id) => {
   this.props.navigation.navigate('formreport', { 
     idreport: reportcat_set,
     namereport:reportname_set,
     reportcat_id:reportcat_id,
-    user:this.state.user,
-    iconreport:iconreport
+    user:this.state.user
   }) 
  }
  
@@ -110,30 +106,10 @@ setTimeout(() =>  {
             key={l.reportcat_id} 
             leftAvatar={{ rounded: true,source: { uri: "http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/img_icon/"+l.reportcat_icon } }}
             title={l.reportcat_thname} 
-            onPress={() => this.onClickReport(l.reportcat_id,l.reportcat_thname,l.reportcat_id,l.reportcat_icon)}
+            onPress={() => this.onClickReport(l.reportcat_id,l.reportcat_thname,l.reportcat_id)}
           />
         ))
       }
-      
-    </View>
-    );
-    console.log()
-    const SecondRoute = () => (
-      <View>
-        {
-         
-          
-          this.state.datafail.map((o, x) => (             
-            <ListItem  
-             
-            />
-          ))
-          
-          
-           
-
-
-        }
       
     </View>
     );
@@ -183,7 +159,9 @@ setTimeout(() =>  {
  
 
 
-
+const SecondRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#673ab8' }]} />
+);
 
 const styles = StyleSheet.create({
   scene: {

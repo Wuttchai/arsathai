@@ -1,9 +1,9 @@
 {
-  "packagerPort": null,
-  "packagerPid": null,
-  "expoServerNgrokUrl": "https://3q-2ef.anonymous.arsathai.exp.direct",
-  "packagerNgrokUrl": "https://packager.3q-2ef.anonymous.arsathai.exp.direct",
-  "ngrokPid": 5004,
+  "packagerPort": 19001,
+  "packagerPid": 10220,
+  "expoServerNgrokUrl": "https://sa-7sk.wuttichai.arsathai.exp.direct",
+  "packagerNgrokUrl": "https://packager.sa-7sk.wuttichai.arsathai.exp.direct",
+  "ngrokPid": 13264,
   "devToolsPort": 19002,
   "expoServerPort": 19000
 }

@@ -1,22 +1,23 @@
 import React from "react";
-import { View, Button, Image, StyleSheet, CheckBox, ScrollView, TouchableOpacity, Alert, TouchableHighlight, AsyncStorage } from "react-native";   
+import { View, Picker,Dimensions, Image, StyleSheet, CheckBox, ScrollView, TouchableOpacity, Alert, TouchableHighlight, AsyncStorage } from "react-native";   
 import { Input, Text  } from 'react-native-elements';
 import CameraRollPicker from 'react-native-camera-roll-picker'; 
 import { Camera } from 'expo-camera';
 import {Permissions} from 'expo'
-import MapView, {
-  MAP_TYPES 
-} from 'react-native-maps'; 
 import * as FileSystem from 'expo-file-system';
 import base64 from 'base-64';
 import { Ionicons } from '@expo/vector-icons';
-
+import MapView, {
+  MAP_TYPES,
+  Polygon,
+  ProviderPropType,
+} from 'react-native-maps'; 
 export default class App extends React.Component { 
   constructor(props) {
     super(props);  
     this.scroll = null;
     this.state = {
-        namereport:this.props.navigation.state.params.namereport,
+        namereport:'สร้างข้อมูลแปลง',
         num:0, 
         image: [],
         gallery:false,
@@ -29,6 +30,10 @@ export default class App extends React.Component {
         report_detail:"",
         report_keyword:"",
         type: Camera.Constants.Type.back, 
+        listtree:[],
+        polygons: [],
+        editing: null,
+        creatingHole: false,
     }
   }   
   static navigationOptions = { 
@@ -37,6 +42,73 @@ export default class App extends React.Component {
       backgroundColor: '#83c336',
     },
     headerTintColor: 'white'
+  }
+  finish() {
+    const { polygons, editing } = this.state;
+    this.setState({
+      polygons: [...polygons, editing],
+      editing: null,
+      creatingHole: false,
+    });
+  }
+
+  createHole() {
+    const { editing, creatingHole } = this.state;
+    if (!creatingHole) {
+      this.setState({
+        creatingHole: true,
+        editing: {
+          ...editing,
+          holes: [...editing.holes, []],
+        },
+      });
+    } else {
+      const holes = [...editing.holes];
+      if (holes[holes.length - 1].length === 0) {
+        holes.pop();
+        this.setState({
+          editing: {
+            ...editing,
+            holes,
+          },
+        });
+      }
+      this.setState({ creatingHole: false });
+    }
+  }
+
+  onPress(e) {
+    const { editing, creatingHole } = this.state;
+    if (!editing) {
+      this.setState({
+        editing: {
+          id: id++,
+          coordinates: [e.nativeEvent.coordinate],
+          holes: [],
+        },
+      });
+    } else if (!creatingHole) {
+      this.setState({
+        editing: {
+          ...editing,
+          coordinates: [...editing.coordinates, e.nativeEvent.coordinate],
+        },
+      });
+    } else {
+      const holes = [...editing.holes];
+      holes[holes.length - 1] = [
+        ...holes[holes.length - 1],
+        e.nativeEvent.coordinate,
+      ];
+      this.setState({
+        editing: {
+          ...editing,
+          id: id++, // keep incrementing id to trigger display refresh
+          coordinates: [...editing.coordinates],
+          holes,
+        },
+      });
+    }
   }
   async componentDidMount(){ 
     console.disableYellowBox = true; 
@@ -50,7 +122,16 @@ export default class App extends React.Component {
       await   navigator.geolocation.getCurrentPosition(
         ({ coords: {latitude, longitude } }) =>  this.setState({latitude, longitude})
       )
-
+      setTimeout(() =>  { 
+        fetch("http://green2.tndevs.com/api/api_get_greentype.php?fbclid=IwAR2EqZup4goE4aV2fmVWpDcB-Jsld3K5TROW_8XwjSUysYEDI2vbvzOeWM0")
+      .then((response) => response.json())
+      .then((responseJson) => {   
+              me.setState({
+                listtree:responseJson
+              })
+      })
+       }, 3000)
+     
   }
   _renderImages() {
     let images = [];
@@ -154,12 +235,13 @@ export default class App extends React.Component {
     this.state.image.map((item) => { 
       image = image.concat('data:image/jpeg;base64,' +item)
     })
-    console.log(image)
+    
 
     fetch(image, 'http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/api_upload.php', {
       method: "post",
       headers: {
-        Accept: "application/x-www-form-urlencoded"
+        Accept: "application/x-www-form-urlencoded",
+        Authorization: `Bearer ${this.props.user.token}`,
       },
       body: data,
     }).then(res => res.json())
@@ -173,15 +255,18 @@ export default class App extends React.Component {
 
 
   submit(){
-   // this.imgupload()
+    //this.imgupload()
     
 
     let report =  {};
     report.report_lat = this.state.latitude
     report.report_lng = this.state.longitude
+    /*
     report.reportcat_id = this.props.navigation.state.params.reportcat_id
     report.reportcat_name  = this.props.navigation.state.params.namereport
-    report.user_id  = this.props.navigation.state.params.user.user_id
+    report.user_id  = this.props.navigation.state.params.userName
+*/
+
     report.report_detail = this.state.report_detail
     report.report_keyword = this.state.report_keyword
     report.action = "insert"
@@ -189,20 +274,13 @@ export default class App extends React.Component {
     report.base64Image = "insert"
 
     let data =  JSON.stringify(report)
-
-    let datafail = [];
-    datafail.reportcat_icon = this.props.navigation.state.params.iconreport
-    datafail.reportcat_thname = this.props.navigation.state.params.namereport
-    datafail.report_detail = this.state.report_detail
-
-    AsyncStorage.setItem("Datafail", datafail);
+    AsyncStorage.setItem("Datafail", data);
     fetch("http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/api/api_set_report.php", {
       method: "post", 
       body: data,
     }).then(res => res.json())
       .then(res => { 
         if(res.status === "success"){
-          AsyncStorage.setItem("Datafail", data);  
           Alert.alert(
             "สำเร็จ!",
             "รายงานผลเรียบร้อย!",
@@ -222,64 +300,106 @@ export default class App extends React.Component {
       });   
   }
 
-    render() { 
+    render() {  
+      const mapOptions = {
+        scrollEnabled: true,
+      };
+  
+      if (this.state.editing) {
+        mapOptions.scrollEnabled = false;
+        mapOptions.onPanDrag = e => this.onPress(e);
+      }
+      let serviceItems = this.state.listtree.map( (l, i) => {
+        return <Picker.Item label={l.greentype_name} value={l.greentype_id} />
+    });
       return (
         
           <ScrollView ref={(scroll) => {this.scroll = scroll;}} contentContainerStyle={styles.contentContainer}>
         <View >   
                     <Text h3 style={styles.paragraph}>รายงาน : {this.state.namereport}</Text> 
                     <MapView
-        showsUserLocation
-        style={{ flex: 1 ,height:300,marginLeft:"5%",marginRight:"5%",marginBottom:"5%" }}
-        mapType={MAP_TYPES.HYBRID}
-        initialRegion={{
-          latitude:this.state.latitude,  
-          longitude:this.state.longitude,
-          latitudeDelta: 0.0022,
-          longitudeDelta: 0.0121,
-        }}
-      />
+          provider={this.props.provider}
+          style={{ flex: 1 ,height:300,marginLeft:"5%",marginRight:"5%",marginBottom:"5%" }}
+          mapType={MAP_TYPES.HYBRID}
+          initialRegion={{
+            latitude:this.state.latitude,  
+            longitude:this.state.longitude,
+            latitudeDelta: 0.0022,
+            longitudeDelta: 0.0121,
+          }}
+          onPress={e => this.onPress(e)}
+          {...mapOptions}
+        >
+          {this.state.polygons.map(polygon => (
+            <Polygon
+              key={polygon.id}
+              coordinates={polygon.coordinates}
+              holes={polygon.holes}
+              strokeColor="#F00"
+              fillColor="rgba(255,0,0,0.5)"
+              strokeWidth={1}
+            />
+          ))}
+          {this.state.editing && (
+            <Polygon
+              key={this.state.editing.id}
+              coordinates={this.state.editing.coordinates}
+              holes={this.state.editing.holes}
+              strokeColor="#000"
+              fillColor="rgba(255,0,0,0.5)"
+              strokeWidth={1}
+            />
+          )}
+        </MapView>
+        <View style={styles.buttonContainer}>
+          {this.state.editing && (
+            <TouchableOpacity
+              onPress={() => this.createHole()}
+              style={[styles.bubble, styles.button]}
+            >
+              <Text>
+                {this.state.creatingHole ? 'Finish Hole' : 'Create Hole'}
+              </Text>
+            </TouchableOpacity>
+          )}
+          {this.state.editing && (
+            <TouchableOpacity
+              onPress={() => this.finish()}
+              style={[styles.bubble, styles.button]}
+            >
+              <Text>Finish</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         <Input 
            style={styles.inputs}   
-           label="รายละเอียด" 
+           label="ชื่อโครงการ" 
            onChangeText={(detail) => this.setState({report_detail:detail})}/>
         <Input 
            style={styles.inputs}   
-           label="KeyWord" 
+           label="เขตการปกครอง" 
            onChangeText={(keyword) => this.setState({report_keyword:keyword})}/>
-         
+ 
+<View style={{ flexDirection: 'column',marginTop: 10}}>
+         <Picker
+  selectedValue={this.state.language}
+  style={{height: 50, width: "100%"}}
+  onValueChange={(itemValue, itemIndex) =>
+    this.setState({language: itemValue})
+  }>
+    <Picker.Item label="--เลือก--" value=" " />
+    {serviceItems}
 
-   <View style={{ flexDirection: 'column',marginTop: 10}}> 
-  <View style={{ flexDirection: 'row' }}>
-    <CheckBox
-    style={styles.checkBox}
-      value={this.state.check1}
-      onValueChange={() => this.setState({ check1: !this.state.check1 })}
-    />
-    <Text style={{marginTop: 5}}> เหตุการ์ณเร่งด่วน</Text>
-  </View>
+  
+  
+</Picker>
+
 </View>
+  
 
-         <View
-  style={{
-    borderBottomColor: 'black',
-    borderBottomWidth: 0.5,
-    marginLeft: "7%",
-    marginRight: "3%"
-  }}
-/>
-
-<View style={{ flexDirection: 'column'}}> 
-  <View style={{ flexDirection: 'row' }}>
-    <CheckBox
-    style={styles.checkBox}
-      value={this.state.check2}
-      onValueChange={() => this.setState({ check2: !this.state.check2 })}
-    />
-    <Text style={{marginTop: 5}}> Hotspot</Text>
-  </View>
-</View>
+      
+ 
  
 <View  style={{flex: 1, flexDirection: 'row', flexWrap: 'wrap'}}> 
        
@@ -435,7 +555,34 @@ export default class App extends React.Component {
     color: '#FAFAFA',
     marginLeft: 10,
     marginTop: 2,
-  }
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  bubble: {
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 20,
+  },
+  latlng: {
+    width: 200,
+    alignItems: 'stretch',
+  },
+  button: {
+    width: 80,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  
   });
 
-  
+  const { width, height } = Dimensions.get('window');
+
+const ASPECT_RATIO = width / height;
+const LATITUDE = 37.78825;
+const LONGITUDE = -122.4324;
+const LATITUDE_DELTA = 0.0922;
+const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
+let id = 0;

@@ -10,8 +10,13 @@
 แปลง รอ get
 เรียกฟอร์ม ส่งรายงาน
 
-
-
+รอรายงาน
+ getDataReport(){
+    this.http.get("http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/api/api_get_report.php?uiid=1100700493937").subscribe( 
+      data => {this.ReportList = JSON.parse(data["_body"]);}, 
+      err => {console.log(err);}
+    );
+  }
 
 
 c310202000@gmail.com
@@ -23,3 +28,23 @@ computercenter142536
 
 
 this.props.navigation.state.params.namereport
+
+
+ผู้ใช้ทั่วไป 8888
+
+เอา username มาเป็น user id
+
+
+6/30/2019
+map ทีลากเส้น
+รายงานสร้างแปลง
+ปุ่มย้อนเเมฟ
+1.เขตปกครอง
+2.รูปภาพ 1รูป
+3.ไฟล์แนบไม่เอา
+4.กรอบสีเขียงไม่เอา
+
+
+สร้างต้นไม้
+
+
