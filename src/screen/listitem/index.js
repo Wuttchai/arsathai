@@ -3,6 +3,7 @@ import { View, StyleSheet, Dimensions,Button, AsyncStorage } from 'react-native'
 import { TabView, SceneMap } from 'react-native-tab-view';
 import { ListItem, Badge, Text  } from 'react-native-elements'
 import { Ionicons } from '@expo/vector-icons'; 
+import NavigationService from '../../NavigationService'; 
 export default class TabViewExample extends React.Component {
   
   state = {
@@ -28,7 +29,7 @@ export default class TabViewExample extends React.Component {
         backgroundColor: '#83c336',
       },
       headerLeft: (
-        <Ionicons name="md-arrow-round-back" onPress={() => _this.props.navigation.navigate('menu')} size={32} color="white" style={{marginRight:10}} />
+        <Ionicons name="md-arrow-round-back" onPress={() => NavigationService.navigate('menu')} size={32} color="white" style={{marginRight:10}} />
       ),
       headerRight: (
       
@@ -37,7 +38,12 @@ export default class TabViewExample extends React.Component {
      headerTintColor: 'white'
     };
   };
-  logout= () =>{
+  logout= async () =>{
+    AsyncStorage.removeItem('user');
+    this.props.navigation.navigate('menu');
+    //await AsyncStorage.clear();
+  }
+  blackpage= () =>{
     AsyncStorage.removeItem('user');
     this.props.navigation.navigate('menu');
   }
@@ -55,8 +61,7 @@ export default class TabViewExample extends React.Component {
     } 
  }).done();   
  
- AsyncStorage.getItem("Datafail").then((value) => { 
-   console.log(JSON.parse(value));
+ AsyncStorage.getItem("Datafail").then((value) => {  
   if(value != null){  
     me.setState({
       //datafail:JSON.parse(value)
@@ -80,7 +85,7 @@ setTimeout(() =>  {
           })
   })
 
-}, 2000)
+}, 1500)
  }
  
 

@@ -17,6 +17,14 @@ export default class AssetExample extends React.Component {
       }
    }).done();    
  }
+
+ componentDidMount(){
+  setTimeout(() =>  { 
+   console.log("==================")
+   }, 1500)
+ }
+
+
   render() {
     return (
       <View style={styles.container}>

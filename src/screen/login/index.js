@@ -50,7 +50,7 @@ export default class LoginView extends Component {
       if(responseJson.userName !== undefined){   
         AsyncStorage.setItem("user", JSON.stringify(datatuser));            
         this.props.navigation.navigate('listitem', { user: responseJson })
-   
+        
       }
     })
     .catch((error) => {

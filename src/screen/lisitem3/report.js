@@ -8,42 +8,29 @@ import DatePicker from 'react-native-datepicker'
 import * as FileSystem from 'expo-file-system';
 import base64 from 'base-64';
 import { Ionicons } from '@expo/vector-icons';
-import MapView, {
-  MAP_TYPES,
-  Polygon,
-  ProviderPropType,
-} from 'react-native-maps'; 
+ 
 export default class App extends React.Component { 
   constructor(props) {
     super(props);  
     this.scroll = null;
     this.state = {
-        namereport:'สร้างข้อมูลแปลง',
+        namereport:'สร้างข้อมูลต้นไม้',
         num:0, 
         image: null,
         date:new Date(),
         date2:new Date(),
         gallery:false,
         header:null,
-        header:null,
-        check1:false,
-        check2:false,
-        latitude:null,
-        longitude:null,
+        header:null, 
         report_detail:"",
         report_keyword:"",
         type: Camera.Constants.Type.back, 
-        listtree:[],
-        province:[],
-        amphur:[],
-        district:[],
-        polygons: [],
-        editing: null,
+        listtree:[], 
+        polygons: [], 
         creatingHole: false,
         province_id:null,
         amphur_id:null,
         district_id:null,
-        greentype_id:null
     }
   }   
   static navigationOptions = { 
@@ -53,77 +40,12 @@ export default class App extends React.Component {
     },
     headerTintColor: 'white'
   }
-  finish() {
-    const { polygons, editing } = this.state;
-    this.setState({
-      polygons: [...polygons, editing],
-      editing: null,
-      creatingHole: false,
-    });
-  }
+ 
 
-  createHole() {
-    const { editing, creatingHole } = this.state;
-    if (!creatingHole) {
-      this.setState({
-        creatingHole: true,
-        editing: {
-          ...editing,
-          holes: [...editing.holes, []],
-        },
-      });
-    } else {
-      const holes = [...editing.holes];
-      if (holes[holes.length - 1].length === 0) {
-        holes.pop();
-        this.setState({
-          editing: {
-            ...editing,
-            holes,
-          },
-        });
-      }
-      this.setState({ creatingHole: false });
-    }
-  }
-
-  onPress(e) {
-    const { editing, creatingHole } = this.state;
-    if (!editing) {
-      this.setState({
-        editing: {
-          id: id++,
-          coordinates: [e.nativeEvent.coordinate],
-          holes: [],
-        },
-      });
-    } else if (!creatingHole) {
-      this.setState({
-        editing: {
-          ...editing,
-          coordinates: [...editing.coordinates, e.nativeEvent.coordinate],
-        },
-      });
-    } else {
-      const holes = [...editing.holes];
-      holes[holes.length - 1] = [
-        ...holes[holes.length - 1],
-        e.nativeEvent.coordinate,
-      ];
-      this.setState({
-        editing: {
-          ...editing,
-          id: id++, // keep incrementing id to trigger display refresh
-          coordinates: [...editing.coordinates],
-          holes,
-        },
-      });
-    }
-  }
+   
   async componentWillMount(){ 
     console.disableYellowBox = true; 
-    let me = this
-    const {status} = await Permissions.getAsync(Permissions.LOCATION) 
+    let me = this 
     const { statusca } = await Permissions.askAsync(Permissions.CAMERA);
     var date = new Date(); 
     date.setDate(date.getDate() + 3)
@@ -135,44 +57,7 @@ export default class App extends React.Component {
       if(status !== 'granted'){
           const {response} = await Permissions.askAsync(Permissions.LOCATION)
       }
-      await   navigator.geolocation.getCurrentPosition(
-        ({ coords: {latitude, longitude } }) =>  this.setState({latitude, longitude})
-      )
-       
-        fetch("http://green2.tndevs.com/api/api_get_greentype.php?fbclid=IwAR2EqZup4goE4aV2fmVWpDcB-Jsld3K5TROW_8XwjSUysYEDI2vbvzOeWM0")
-      .then((response) => response.json())
-      .then((responseJson) => {   
-              me.setState({
-                listtree:responseJson
-              })
-      })
-        
-      fetch("http://green2.tndevs.com/api/api_get_province.php?fbclid=IwAR3K5dAOQE7AuXrpGsMjyqBQZNlw7u8ekePbj6oxKz5YjuowizCzPAXrUrc")
-      .then((response) => response.json())
-      .then((responseJson) => {    
-              me.setState({
-                province:responseJson
-              })
-      })
-      
-      fetch("http://green2.tndevs.com/api/api_get_amphur.php?province_id=10&fbclid=IwAR2Tg1l3NMnGwTM1SaXnpc1oi0b0u74ttZdDvry_xttNPCkl8z58Gs_U1go")
-      .then((response) => response.json())
-      .then((responseJson) => {    
-              me.setState({
-                amphur:responseJson
-              })
-      })
-
-      fetch("http://green2.tndevs.com/api/api_get_district.php?amphur_id=151&fbclid=IwAR0dqLiStj9Lb1Eq_IQjSw7mZe8cXKHmWRsz_vm9HMY3NsV3Gyzb8XNNqCE")
-      .then((response) => response.json())
-      .then((responseJson) => {    
-              me.setState({
-                district:responseJson
-              })
-      })
-
-      
-     
+   
   }
   _renderImages() {
     let images = [];
@@ -300,19 +185,8 @@ export default class App extends React.Component {
     //this.imgupload()
     
 
-    let report =  {}; 
-    report.project_name = this.state.project_name
-    report.greentype_id = this.state.greentype_id
-    report.description = this.state.description
-    report.created_date = this.state.created_date  
-    report.date_search = this.state.date_search  
-    report.province_id = this.state.province_id 
-    report.amphur_id = this.state.amphur_id 
-    report.district_id = this.state.district_id 
-    report.moo = this.state.moo
-    report.project_percent = this.state.project_percent 
-    report.number_of_area = this.state.number_of_area 
-    
+    let report =  {};
+  
     /*
     report.reportcat_id = this.props.navigation.state.params.reportcat_id
     report.reportcat_name  = this.props.navigation.state.params.namereport
@@ -357,210 +231,18 @@ export default class App extends React.Component {
         scrollEnabled: true,
       };
   
-      if (this.state.editing) {
-        mapOptions.scrollEnabled = false;
-        mapOptions.onPanDrag = e => this.onPress(e);
-      } 
-      const serviceItems = this.state.listtree.map( (l, i) => {
-        return <Picker.Item label={l.greentype_name} value={l.greentype_id} />
-    }); 
-
-    const province = this.state.province.map( (l, i) => {
-      return <Picker.Item label={l.province_name} value={l.province_id} />
-  }); 
-  const amphur = this.state.amphur.map( (l, i) => {
-    return <Picker.Item label={l.amphur_name} value={l.amphur_id} />
-}); 
-const district = this.state.district.map( (l, i) => {
-  return <Picker.Item label={l.district_name} value={l.district_id} />
-}); 
+      
+  
       return (
         
           <ScrollView ref={(scroll) => {this.scroll = scroll;}} contentContainerStyle={styles.contentContainer}>
         <View >   
                     <Text h3 style={styles.paragraph}>รายงาน : {this.state.namereport}</Text> 
-                    <MapView
-          provider={this.props.provider}
-          style={{ flex: 1 ,height:300,marginLeft:"5%",marginRight:"5%",marginBottom:"5%" }}
-          mapType={MAP_TYPES.HYBRID}
-          initialRegion={{
-            latitude:this.state.latitude,  
-            longitude:this.state.longitude,
-            latitudeDelta: 0.0022,
-            longitudeDelta: 0.0121,
-          }}
-          onPress={e => this.onPress(e)}
-          {...mapOptions}
-        >
-          {this.state.polygons.map(polygon => (
-            <Polygon
-              key={polygon.id}
-              coordinates={polygon.coordinates}
-              holes={polygon.holes}
-              strokeColor="#F00"
-              fillColor="rgba(255,0,0,0.5)"
-              strokeWidth={1}
-            />
-          ))}
-          {this.state.editing && (
-            <Polygon
-              key={this.state.editing.id}
-              coordinates={this.state.editing.coordinates}
-              holes={this.state.editing.holes}
-              strokeColor="#000"
-              fillColor="rgba(255,0,0,0.5)"
-              strokeWidth={1}
-            />
-          )}
-        </MapView>
-        <View style={styles.buttonContainer}>
-          {this.state.editing && (
-            <TouchableOpacity
-              onPress={() => this.createHole()}
-              style={[styles.bubble, styles.button]}
-            >
-              <Text>
-                {this.state.creatingHole ? 'Finish Hole' : 'Create Hole'}
-              </Text>
-            </TouchableOpacity>
-          )}
-          {this.state.editing && (
-            <TouchableOpacity
-              onPress={() => this.finish()}
-              style={[styles.bubble, styles.button]}
-            >
-              <Text>Finish</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+                    
+            
 
-        <Input 
-           style={styles.inputs}   
-           label="ชื่อโครงการ" 
-           onChangeText={(detail) => this.setState({report_detail:detail})}/>
-        <Input 
-           style={styles.inputs}   
-           label="เขตการปกครอง" 
-           onChangeText={(keyword) => this.setState({report_keyword:keyword})}/>
- 
-<View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, marginLeft:"3%"}}>
-<Text style={{color: '#86939e',fontSize: 16,fontWeight: 'bold'}}   >เลือกประเภทต้นไม้</Text>
-
-         <Picker
-  selectedValue={this.state.language}
-  style={{height: 50, width: "100%"}}
-  onValueChange={(itemValue, itemIndex) =>
-    this.setState({language: itemValue})
-  }>
-    <Picker.Item label="--เลือก--" value=" " />
-    {serviceItems}
-
+         
   
-  
-</Picker>
-
-</View>
-<View  style={{marginBottom: 10}}  >
-<Input 
-           
-           label="รายละเอียดโครงการ" 
-           onChangeText={(keyword) => this.setState({report_keyword:keyword})}/> 
-</View>
-<View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, marginLeft:"3%"}}>
-<Text style={{color: '#86939e',fontSize: 16,fontWeight: 'bold'}}   >วันที่ปลูก</Text>
- 
-</View>  
-<View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, marginLeft:"3%"}}>
- 
-<DatePicker
-        style={{width: "90%"}}
-        date={this.state.date2}
-        mode="date" 
-        format="DD-MM-YYYY"
-        confirmBtnText="Confirm"
-        cancelBtnText="Cancel"
-        customStyles={{
-          dateIcon: {
-            position: 'absolute',
-            left: 0,
-            top: 4,
-            marginLeft: 0
-          },
-          dateInput: {
-            marginLeft: 36, 
-          } 
-        }}
-        onDateChange={(date) => {this.setState({date: date2})}}
-      />
-</View>              
-
-<View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, marginLeft:"3%"}}>
-<Text style={{color: '#86939e',fontSize: 16,fontWeight: 'bold'}}   >วันที่สำรวจ</Text>
- 
-</View>  
-<View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, marginLeft:"3%"}}>
- 
-<DatePicker
-        style={{width: "90%"}}
-        date={this.state.date}
-        mode="date" 
-        format="DD-MM-YYYY"
-        confirmBtnText="Confirm"
-        cancelBtnText="Cancel"
-        customStyles={{
-          dateIcon: {
-            position: 'absolute',
-            left: 0,
-            top: 4,
-            marginLeft: 0
-          },
-          dateInput: {
-            marginLeft: 36, 
-          } 
-        }}
-        onDateChange={(date) => {this.setState({date: date})}}
-      />
-</View>              
- 
-<View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, marginLeft:"3%"}}>
-<Text style={{color: '#86939e',fontSize: 16,fontWeight: 'bold'}}   >สถานที่ปลูก</Text>
-<Picker
-  selectedValue={this.state.province_id}
-  style={{height: 50, width: "100%"}}
-  onValueChange={(itemValue, itemIndex) =>
-    this.setState({province_id: itemValue})
-  }>
-    <Picker.Item label="--จังหวัด--" value=" " />
-    {province}
-
-  
-  
-</Picker>
-<Picker
-  selectedValue={this.state.amphur_id}
-  style={{height: 50, width: "100%"}}
-  onValueChange={(itemValue, itemIndex) =>
-    this.setState({amphur_id: itemValue})
-  }>
-    <Picker.Item label="--อำเภอ--" value=" " />
-    {amphur}
-
-  
-  
-</Picker>
-<Picker
-  selectedValue={this.state.district_id}
-  style={{height: 50, width: "100%"}}
-  onValueChange={(itemValue, itemIndex) =>
-    this.setState({district_id: itemValue})
-  }>
-    <Picker.Item label="--ตำบล--" value=" " />
-    {district}
-
-  
-  
-</Picker>
-</View>  
 <View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, marginLeft:"3%"}}>
 <Input 
            style={styles.inputs}   
@@ -756,9 +438,4 @@ const district = this.state.district.map( (l, i) => {
 
   const { width, height } = Dimensions.get('window');
 
-const ASPECT_RATIO = width / height;
-const LATITUDE = 37.78825;
-const LONGITUDE = -122.4324;
-const LATITUDE_DELTA = 0.0922;
-const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
-let id = 0;
+ 
