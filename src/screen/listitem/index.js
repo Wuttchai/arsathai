@@ -1,9 +1,7 @@
 import * as React from 'react';
 import { View, StyleSheet, Dimensions,Button, AsyncStorage } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
-import { ListItem, Badge, Text  } from 'react-native-elements'
-import { Ionicons } from '@expo/vector-icons'; 
-import NavigationService from '../../NavigationService'; 
+import { ListItem, Badge, Text  } from 'react-native-elements' 
 export default class TabViewExample extends React.Component {
   
   state = {
@@ -28,36 +26,48 @@ export default class TabViewExample extends React.Component {
       headerStyle: {
         backgroundColor: '#83c336',
       },
-      headerLeft: (
-        <Ionicons name="md-arrow-round-back" onPress={() => NavigationService.navigate('menu')} size={32} color="white" style={{marginRight:10}} />
-      ),
-      headerRight: (
       
-      <Ionicons name="md-log-out" onPress={() => _this.logout()} size={32} color="white" style={{marginRight:10}} />
-     ),
+      
      headerTintColor: 'white'
     };
   };
   logout= async () =>{
-    AsyncStorage.removeItem('user');
-    this.props.navigation.navigate('menu');
-    //await AsyncStorage.clear();
+    await AsyncStorage.clear();
+    this.props.navigation.navigate('Auth'); 
   }
   blackpage= () =>{
     AsyncStorage.removeItem('user');
     this.props.navigation.navigate('menu');
   }
-  componentWillMount(){
+  componentDidMount(){
   _this = this;
   let me = this
-  let datauser = [];
+  let datauser = []; 
     AsyncStorage.getItem("user").then((value) => {   
     if(value == null){     
       this.props.navigation.navigate('login')
     }else{
+      datauser = JSON.parse(value); 
+      
       this.setState({
         user:JSON.parse(value)
+      }) 
+
+      fetch("http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/api/api_get_reportcat.php")
+      .then((response) => response.json())
+      .then((responseJson) => {  
+              me.setState({
+                menu:responseJson
+              })
       })
+    
+      fetch("http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/api/api_get_report.php?uiid="+datauser.user_id)
+    .then((response) =>  response.json())
+    .then((responseJson) => {       
+            me.setState({
+              reportsess:responseJson 
+            })
+    })
     } 
  }).done();   
  
@@ -67,25 +77,9 @@ export default class TabViewExample extends React.Component {
       //datafail:JSON.parse(value)
     })
   }
-}).done();  
-setTimeout(() =>  { 
-    fetch("http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/api/api_get_reportcat.php")
-    .then((response) => response.json())
-    .then((responseJson) => {  
-            me.setState({
-              menu:responseJson
-            })
-    })
+}).done();   
   
-    fetch("http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/api/api_get_report.php?uiid=admin")
-  .then((response) =>  response.json())
-  .then((responseJson) => {       
-          me.setState({
-            reportsess:responseJson 
-          })
-  })
-
-}, 1500)
+ 
  }
  
 

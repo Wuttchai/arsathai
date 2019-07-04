@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Button, Image, StyleSheet, CheckBox, ScrollView, TouchableOpacity, Alert, TouchableHighlight, AsyncStorage } from "react-native";   
-import { Input, Text  } from 'react-native-elements';
-import CameraRollPicker from 'react-native-camera-roll-picker'; 
+import { Input, Text  } from 'react-native-elements'; 
 import { Camera } from 'expo-camera';
 import {Permissions} from 'expo'
 import MapView, {
@@ -10,7 +9,7 @@ import MapView, {
 import * as FileSystem from 'expo-file-system';
 import base64 from 'base-64';
 import { Ionicons } from '@expo/vector-icons';
-
+import ImageBrowser from './image';
 export default class App extends React.Component { 
   constructor(props) {
     super(props);  
@@ -28,7 +27,9 @@ export default class App extends React.Component {
         longitude:null,
         report_detail:"",
         report_keyword:"",
-        type: Camera.Constants.Type.back, 
+        type: Camera.Constants.Type.back,
+        imageBrowserOpen: false,
+        photos: [] 
     }
   }   
   static navigationOptions = { 
@@ -52,33 +53,38 @@ export default class App extends React.Component {
       )
 
   }
-  _renderImages() {
-    let images = [];
-    this.state.image.map((item, index) => { 
-      images.push(
-        <TouchableOpacity
-        onLongPress ={()=>this.handlerLongClick(this,index)} 
-        //Here is the trick
-        activeOpacity={0.6}
-        style={styles.button}>
-          <Image 
-          source={{ uri: base64.decode(item) }}
-          style={{ width: 100, height: 100,marginRight:"5%",marginBottom:(index+1) % 3 == 0 ? 10 : 0 }}
-        /> 
-      </TouchableOpacity>
-      )     
-    })
-
-    return images;
+  renderImage(item, i) { 
+    return(
+      <TouchableOpacity
+      onLongPress ={()=>this.handlerLongClick(this,i)} 
+      //Here is the trick
+      activeOpacity={0.6}
+      style={styles.button}>       
+      <Image
+        style={{ width: 100, height: 100,marginRight:"5%",marginBottom:(i+1) % 3 == 0 ? 10 : 0 }}
+        source={{uri: item.uri}}
+        key={i}
+      />
+    </TouchableOpacity>
+      
+    )
   }
+  imageBrowserCallback = (callback) => {
+    callback.then((photos) => {
+      console.log(photos)
+      this.setState({
+        imageBrowserOpen: false,
+        photos
+      })
+    }).catch((e) => console.log(e))
+  }
+  
   handlerLongClick = (index) => { 
     
 
     Alert.alert(
-      'Alert Title',
-      'My Alert Msg',
-      [
-        {text: 'Ask me later', onPress: () => console.log('Ask me later pressed')},
+      'ลบรูปภาพ', 
+      [ 
         {
           text: 'Cancel',
           onPress: () => console.log('Cancel Pressed'),
@@ -112,31 +118,30 @@ export default class App extends React.Component {
     } 
     this.scroll.scrollToEnd();  
    }
-   async snap() {        
+   async snap() {   
+       
     if (this.camera) { 
-       const options = {  exif: true};
-       await this.camera.takePictureAsync(options).then(photo => {
-          photo.exif.Orientation = 1;                    
+       const options = {  skipProcessing: true,exif: true};
+       await this.camera.takePictureAsync(options).then(photox => {
+        photox.exif.Orientation = 1;        
           this.setState({ 
-            image: this.state.image.concat([base64.encode(photo.uri)])
+            photos: this.state.photos.concat(photox)
           })            
            });     
      }
     }   
-    async myImages(images){ 
-      await this.setState({
-      num:0,
-      image: []
-  }) 
-    images.map((item, index) => { 
-        this.setState({
-            num:images.length,
-            image: this.state.image.concat([base64.encode(item.uri)])
-        })  
-    }); 
-        
-  }
+  
 
+
+    
+  imageBrowserCallback = (callback) => {
+    callback.then((photos) => { 
+      this.setState({
+        imageBrowserOpen: false,
+        photos
+      })
+    }).catch((e) => console.log(e))
+  }
   imgupload(){
     let perfix_img = Date.now()
     let random = Math.floor(Math.random()*100)
@@ -206,8 +211,7 @@ export default class App extends React.Component {
           Alert.alert(
             "สำเร็จ!",
             "รายงานผลเรียบร้อย!",
-            [{ text: "OK"}],
-            { cancelable: false }
+            [{ text: "OK"}]
           );
         }      
       })
@@ -216,13 +220,15 @@ export default class App extends React.Component {
         Alert.alert(
           "ล้มเหลว!",
           "ไม่สามารถรายงานผลได้!",
-          [{ text: "OK", onPress: () => that.props.close() }],
-          { cancelable: false }
+          [{ text: "OK" }]
         );
       });   
   }
 
     render() { 
+      if (this.state.imageBrowserOpen) {
+        return(<ImageBrowser max={5} callback={this.imageBrowserCallback}/>);
+      }
       return (
         
           <ScrollView ref={(scroll) => {this.scroll = scroll;}} contentContainerStyle={styles.contentContainer}>
@@ -282,14 +288,14 @@ export default class App extends React.Component {
 </View>
  
 <View  style={{flex: 1, flexDirection: 'row', flexWrap: 'wrap'}}> 
-       
- {this._renderImages()} 
+        
+ {this.state.photos.map((item,i) => this.renderImage(item,i))}
 </View> 
 
     <View style={{  marginTop:10  }}>
       <View style={styles.buttonContainer}>                   
       <TouchableHighlight
-  onPress={() => this.buttonclick('เลือกจากคลั่ง')} style={styles.btnClickContain}
+  onPress={() => this.setState({imageBrowserOpen: true})} style={styles.btnClickContain}
   underlayColor='#042417'>
   <View
     style={styles.btnContainer}>
@@ -302,7 +308,7 @@ export default class App extends React.Component {
        
        
 <TouchableHighlight
-  onPress={() => this.buttonclick('กล้องถ่ายรูป')} style={styles.btnClickContain}
+  onPress={() => this.buttonclick('xxxxx')} style={styles.btnClickContain}
   underlayColor='#042417'>
   <View
     style={styles.btnContainer}>
@@ -314,14 +320,7 @@ export default class App extends React.Component {
  
       
 
-            {this.state.gallery ? (
-                 <View style={{  alignItems: 'center', justifyContent: 'center',marginTop:5 }}>
-                 <Text style={{marginTop:20}}>
-                {this.state.num} Image selected
-                </Text>
-                <CameraRollPicker initialNumToRender={1} callback={this.myImages.bind(this)}  />
-                 </View>
-            ):null} 
+          
               {this.state.camera ? (
                <View style={{ flex: 1,height:200 }}>
                <Camera ref={ (ref) => {this.camera = ref} } style={{ flex: 1 }} type={this.state.type}>
@@ -355,6 +354,7 @@ export default class App extends React.Component {
                        
                      }} >
                      <Text style={{ fontSize: 18, marginBottom: 10, color: 'white' }}> capture </Text>
+                     
                    </TouchableOpacity>
                  </View>
                </Camera>

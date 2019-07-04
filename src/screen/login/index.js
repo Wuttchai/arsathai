@@ -27,10 +27,18 @@ export default class LoginView extends Component {
   static navigationOptions = { 
     title: 'เข้าสู่ระบบ',
     headerStyle: {
-      backgroundColor: '#83c336',
-    },
+      backgroundColor: '#83c336', 
+    }, 
+    headerTitleStyle: {
+      alignSelf: 'center',
+      textAlign: "center",
+      justifyContent: 'center',
+      flex: 1,
+      fontWeight: 'bold',
+      textAlignVertical: 'center'
+      },
     headerLeft: (
-      <Ionicons name="md-arrow-round-back" onPress={() => _this.props.navigation.navigate('menu')} size={32} color="white" style={{marginRight:10}} />
+     null
     ),
     headerTintColor: 'white'
   }
@@ -47,10 +55,8 @@ export default class LoginView extends Component {
       datatuser.user_id = _username
       datatuser.datauser =  responseJson
       
-      if(responseJson.userName !== undefined){   
-        AsyncStorage.setItem("user", JSON.stringify(datatuser));            
-        this.props.navigation.navigate('listitem', { user: responseJson })
-        
+      if(responseJson.userName !== undefined){  
+        this._signInAsync(JSON.stringify(datatuser));                      
       }
     })
     .catch((error) => {
@@ -59,7 +65,28 @@ export default class LoginView extends Component {
   } 
     
   }
-  
+  _signInAsync = async (data) => {
+   await AsyncStorage.setItem("user", data); 
+   await AsyncStorage.setItem('userToken', 'abc');
+    this.props.navigation.navigate('App');
+  };
+  _signorther = async () => {
+    await AsyncStorage.setItem("user",{
+      "user_id":"8888",
+      "datauser":{
+        "userName":"ผู้ใช้ทั่วไป",
+        "userSurname":"ระบบ",
+        "userPrefix":"นาย",
+        "position":"-1",
+        "addrMoo":"",
+        "addrSubdistrict":"",
+        "addrDistrict":""
+    ,"addrProvince":""
+    }
+  });
+  await AsyncStorage.setItem('userToken', 'abc');
+    this.props.navigation.navigate('App');
+  };
   render() {
     return (
       <ScrollView contentContainerStyle={styles.contentContainer}>
@@ -71,7 +98,7 @@ export default class LoginView extends Component {
            style={styles.inputs} 
            placeholder='ชื่อผู้ใช้งาน' 
            placeholderTextColor={'#83c336'}
-           onChangeText={(email) => this.setState({email})}/>
+           onChangeText={(email) => this.setState({email:email})}/>
         </View>
         
         <View style={styles.inputContainer}>
@@ -80,7 +107,7 @@ export default class LoginView extends Component {
            style={styles.inputs} 
            placeholder='รหัสผ่าน' 
            placeholderTextColor={'#83c336'} 
-           onChangeText={(password) => this.setState({password})}/>
+           onChangeText={(password) => this.setState({password:password})}/>
            
         </View>
       
@@ -93,7 +120,7 @@ export default class LoginView extends Component {
         </TouchableHighlight>
 
         <TouchableHighlight style={styles.buttonContainer}>
-          <Button title="ผู้ใช้ทั่วไป" color="#83c336" onPress={() => this.props.navigation.navigate('listitem', { name: 'Brent' })}/>
+          <Button title="ผู้ใช้ทั่วไป" color="#83c336" onPress={() => this._signorther()}/>
           </TouchableHighlight>
       </View>
       </ScrollView>

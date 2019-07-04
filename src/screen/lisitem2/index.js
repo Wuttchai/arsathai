@@ -23,14 +23,8 @@ export default class TabViewExample extends React.Component {
       headerTitle: 'ระบบรายงาน',
       headerStyle: {
         backgroundColor: '#83c336',
-      },
-      headerLeft: (
-        <Ionicons name="md-arrow-round-back" onPress={() => _this.props.navigation.navigate('menu')} size={32} color="white" style={{marginRight:10}} />
-      ),
-      headerRight: (
-      
-      <Ionicons name="md-log-out" onPress={() => _this.logout()} size={32} color="white" style={{marginRight:10}} />
-     ),
+      }, 
+     
      headerTintColor: 'white'
     };
   };
@@ -38,7 +32,7 @@ export default class TabViewExample extends React.Component {
     AsyncStorage.removeItem('user');
     this.props.navigation.navigate('menu');
   }
- componentWillMount(){
+  componentDidMount(){
     AsyncStorage.getItem("user").then((value) => {   
     if(value == null){     
       this.props.navigation.navigate('login')

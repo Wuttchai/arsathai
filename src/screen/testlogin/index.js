@@ -1,121 +1,132 @@
-import React from 'react';
-import {
-  ActivityIndicator,
-  AsyncStorage,
-  Button,
-  StatusBar,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { createStackNavigator, createSwitchNavigator, createAppContainer } from 'react-navigation';
+import React, { Component } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, Button } from 'react-native';
+import { RNCamera } from 'react-native-camera';
 
-class SignInScreen extends React.Component {
-  static navigationOptions = {
-    title: 'Please sign in',
+export default class BadInstagramCloneApp extends Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      isVisible: false,
+      pictureType: null,
+      value1: null,
+      value2: null
+    }
+  }
+  initTakingPicture = (pictureType) => {
+    this.setState({
+      isVisible: true,
+      pictureType: pictureType
+    })
+  }
+  async componentDidMount(){ 
+    console.disableYellowBox = true; 
+    const {status} = await Permissions.getAsync(Permissions.LOCATION) 
+    const { statusca } = await Permissions.askAsync(Permissions.CAMERA);
+    this.setState({ hasCameraPermission: statusca === 'granted' });
+     
+      if(status !== 'granted'){
+          const {response} = await Permissions.askAsync(Permissions.LOCATION)
+      }
+      await   navigator.geolocation.getCurrentPosition(
+        ({ coords: {latitude, longitude } }) =>  this.setState({latitude, longitude})
+      )
+
+  }
+  takePicture = async function() {
+    if (this.camera) {
+      const options = { quality: 0.5, base64: true };
+      const data = await this.camera.takePictureAsync(options);
+      console.log(data.uri);
+      let fieldToSave = "value1" // Fallback
+      if (this.state.pictureType === "A") {
+        // Operation you need to do for pictureType A
+        fieldToSave = "value1"
+      } else if (this.state.pictureType === "B") {
+        // Operation you need to do for pictureType B
+        fieldToSave = "value2"
+      } 
+
+      this.setState({
+        isVisible: false,  
+        pictureType: null,
+        [fieldToSave]: data.uri
+      });
+    }
   };
-
   render() {
     return (
-      <View style={styles.container}>
-        <Button title="Sign in!" onPress={this._signInAsync} />
-      </View>
+        <View style={styles.subcontainer}>
+          {this.state.isVisible === true
+              ?
+                <View style={styles.container}>
+                  <RNCamera
+                      ref={ref => {
+                        this.camera = ref;
+                      }}
+                      style={styles.preview}
+                      type={RNCamera.Constants.Type.back}
+                      flashMode={RNCamera.Constants.FlashMode.on}
+                      permissionDialogTitle={'Permission to use camera'}
+                      permissionDialogMessage={'We need your permission to use your camera phone'}
+                      onGoogleVisionBarcodesDetected={({ barcodes }) => {
+                        console.log(barcodes);
+                      }}
+                  />
+                  <View style={{ flex: 0, flexDirection: 'row', justifyContent: 'center' }}>
+                    <TouchableOpacity onPress={this.takePicture.bind(this)} style={styles.capture}>
+                      <Text style={{ fontSize: 14 }}> SNAP </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              :
+                <View>
+                  <Button title='PHOTO 1' onPress={() => this.initTakingPicture("A")}/>
+                  <Button title='PHOTO 2' onPress={() => this.initTakingPicture("B")}/>
+                  <Button title='SHOW RESULTS' onPress={this.showResults}/>
+                </View>
+          }
+        </View>
     );
   }
 
-  _signInAsync = async () => {
-    await AsyncStorage.setItem('userToken', 'abc');
-    this.props.navigation.navigate('App');
-  };
-}
-
-class HomeScreen extends React.Component {
-  static navigationOptions = {
-    title: 'Welcome to the app!',
-  };
-
-  render() {
-    return (
-      <View style={styles.container}>
-        <Button title="Show me more of the app" onPress={this._showMoreApp} />
-        <Button title="Actually, sign me out :)" onPress={this._signOutAsync} />
-      </View>
-    );
+  changeState = () =>{
+    this.setState({isVisible: true})
   }
 
-  _showMoreApp = () => {
-    this.props.navigation.navigate('Other');
-  };
-
-  _signOutAsync = async () => {
-    await AsyncStorage.clear();
-    this.props.navigation.navigate('Auth');
-  };
-}
-
-class OtherScreen extends React.Component {
-  static navigationOptions = {
-    title: 'Lots of features here',
-  };
-
-  render() {
-    return (
-      <View style={styles.container}>
-        <Button title="I'm done, sign me out" onPress={this._signOutAsync} />
-        <StatusBar barStyle="default" />
-      </View>
-    );
+  changeState2 = () =>{
+    this.setState({isVisible: true})
   }
 
-  _signOutAsync = async () => {
-    await AsyncStorage.clear();
-    this.props.navigation.navigate('Auth');
-  };
-}
-
-class AuthLoadingScreen extends React.Component {
-  constructor() {
-    super();
-    this._bootstrapAsync();
+  showResults = () => {
+    console.log('VALUE1: ' + this.state.value1);
+    console.log('VALUE2: ' + this.state.value2);
   }
 
-  // Fetch the token from storage then navigate to our appropriate place
-  _bootstrapAsync = async () => {
-    const userToken = await AsyncStorage.getItem('userToken');
 
-    // This will switch to the App screen or Auth screen and this loading
-    // screen will be unmounted and thrown away.
-    this.props.navigation.navigate(userToken ? 'App' : 'Auth');
-  };
-
-  // Render any loading content that you like here
-  render() {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator />
-        <StatusBar barStyle="default" />
-      </View>
-    );
-  }
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    flexDirection: 'column',
+    backgroundColor: 'black'
+  },
+  subcontainer: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  preview: {
+    flex: 1,
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    justifyContent: 'center',
+  },
+  capture: {
+    flex: 0,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    padding: 15,
+    paddingHorizontal: 20,
+    alignSelf: 'center',
+    margin: 20,
   },
 });
-
-const AppStack = createStackNavigator({ Home: HomeScreen, Other: OtherScreen });
-const AuthStack = createStackNavigator({ SignIn: SignInScreen });
-
-export default createAppContainer(createSwitchNavigator(
-  {
-    AuthLoading: AuthLoadingScreen,
-    App: AppStack,
-    Auth: AuthStack,
-  },
-  {
-    initialRouteName: 'AuthLoading',
-  }
-));

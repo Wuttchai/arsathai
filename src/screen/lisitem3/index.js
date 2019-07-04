@@ -38,7 +38,7 @@ export default class TabViewExample extends React.Component {
     AsyncStorage.removeItem('user');
     this.props.navigation.navigate('menu');
   }
- componentWillMount(){
+  componentDidMount(){
     AsyncStorage.getItem("user").then((value) => {   
     if(value == null){     
       this.props.navigation.navigate('login')

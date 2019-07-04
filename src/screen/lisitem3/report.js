@@ -43,7 +43,7 @@ export default class App extends React.Component {
  
 
    
-  async componentWillMount(){ 
+  async componentDidMount(){ 
     console.disableYellowBox = true; 
     let me = this 
     const { statusca } = await Permissions.askAsync(Permissions.CAMERA);
