@@ -7,10 +7,11 @@ import map from './screen/listitem/camera';
 import menu from './screen/login/menu';
 import login from './screen/login';  
 import AuthLoadingScreen from './screen/login/AuthLoadingScreen'; 
-import test from './screen/listitem/test';
+import test from './screen/testlogin/index';
 
 const AppStack = createStackNavigator({ 
-     //test:{ screen:test}, 
+  
+  
     menu:{ screen:menu},   
     listitem:{ screen:listitem},
     listitem2:{ screen:listitem2},

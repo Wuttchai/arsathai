@@ -21,10 +21,10 @@ export default class App extends React.Component {
           <Button
               onPress={() => this.logout()}
               icon={
-              <Ionicons name="md-log-out"  size={20} color="white" style={{marginRight:10}} />
+              <Ionicons name="md-log-out"  size={20} color="white" />
               }
               iconLeft
-              title="ออกระบบ"
+              title=" ออกระบบ"
               buttonStyle={{
                 height: 30,
                 width: "20%",

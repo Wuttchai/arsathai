@@ -35,7 +35,8 @@ export default class ImageBrowser extends React.Component {
       newSelected[index] = true
     }
     if (Object.keys(newSelected).length > this.props.max) return;
-    if (!newSelected) newSelected = {};
+    if (!newSelected) 
+    newSelected = {};
     this.setState({ selected: newSelected })
   }
 
@@ -63,7 +64,7 @@ export default class ImageBrowser extends React.Component {
     return { length, offset: length * index, index }
   }
 
-  prepareCallback() {
+  prepareCallback() { 
     let { selected, photos } = this.state;
     let selectedPhotos = photos.filter((item, index) => {
       return(selected[index])
@@ -76,23 +77,23 @@ export default class ImageBrowser extends React.Component {
         return imageData.map((data, i) => {
           return {file: selectedPhotos[i], ...data}
         })
-      })
-    this.props.callback(callbackResult)
+      }) 
+    this.props.callback(callbackResult,this.props.report_keyword,this.props.report_detail)
   }
 
   renderHeader = () => {
-    let selectedCount = Object.keys(this.state.selected).length;
-    let headerText = selectedCount + ' Selected';
-    if (selectedCount === this.props.max) headerText = headerText + ' (Max)';
+    let selectedCount = Object.keys(this.state.selected).length+this.props.num;
+    let headerText = 'มีรูปภาพอยู่ : '+selectedCount;
+    if (selectedCount === 5) headerText = headerText + ' (Max)';
     return (
       <View style={styles.header}>
         <Button
-          title="Exit"
-          onPress={() => this.props.callback(Promise.resolve([]))}
+          title="ยกเลิก"
+          onPress={() => this.props.callback(Promise.resolve([]),this.props.report_keyword,this.props.report_detail)}
         />
         <Text>{headerText}</Text>
         <Button
-          title="Choose"
+          title="ยืนยัน"
           onPress={() => this.prepareCallback()}
         />
       </View>

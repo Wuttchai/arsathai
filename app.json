@@ -25,7 +25,8 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.aongart.arsathai",
+      "versionCode": 2.0,
+      "package": "th.go.deqp.deqpnevv2",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -38,6 +39,6 @@
         "WRITE_EXTERNAL_STORAGE"
       ]
     }
-
+    
   }
 }

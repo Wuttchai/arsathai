@@ -1,31 +1,29 @@
 import React from "react";
-import { View, Picker,Dimensions, Image, StyleSheet  , ScrollView, TouchableOpacity, Alert, TouchableHighlight, AsyncStorage } from "react-native";   
-import { Input,Text  } from 'react-native-elements';
-import CameraRollPicker from 'react-native-camera-roll-picker'; 
+import { View,Button, Picker, Image, StyleSheet  , ScrollView, TouchableOpacity, Alert, TouchableHighlight, AsyncStorage } from "react-native";   
+  
+import { Input,Text  } from 'react-native-elements'; 
 import { Camera } from 'expo-camera';
-import {Permissions} from 'expo'
+import {Permissions, ImagePicker} from 'expo'
 import DatePicker from 'react-native-datepicker'
-import * as FileSystem from 'expo-file-system';
-import base64 from 'base-64';
+import * as FileSystem from 'expo-file-system'; 
+
+
 import { Ionicons } from '@expo/vector-icons';
 import MapView, {
   MAP_TYPES,
   Polygon,
   ProviderPropType,
-} from 'react-native-maps'; 
+} from 'react-native-maps';  
 export default class App extends React.Component { 
   constructor(props) {
-    super(props);  
+    super(props);   
     this.scroll = null;
     this.state = {
         namereport:'สร้างข้อมูลแปลง',
         num:0, 
         image: null,
         date:new Date(),
-        date2:new Date(),
-        gallery:false,
-        header:null,
-        header:null,
+        date2:new Date(),   
         check1:false,
         check2:false,
         latitude:null,
@@ -37,21 +35,23 @@ export default class App extends React.Component {
         province:[],
         amphur:[],
         district:[],
+        project_moo:null,
         polygons: [],
+        number_of_area:0,
         editing: null,
         creatingHole: false,
         province_id:null,
         amphur_id:null,
         district_id:null,
-        greentype_id:null
+        greentype_id:null,
+        project_address:null,
+        project_percent:0,
+        user:[],
+        region:[]
     }
   }   
   static navigationOptions = { 
-    title: 'รายงาน',
-    headerStyle: {
-      backgroundColor: '#83c336',
-    },
-    headerTintColor: 'white'
+    title: 'รายงาน', 
   }
   finish() {
     const { polygons, editing } = this.state;
@@ -120,7 +120,7 @@ export default class App extends React.Component {
       });
     }
   }
-  async componentDidMount(){ 
+  async componentDidMount(){     
     console.disableYellowBox = true; 
     let me = this
     const {status} = await Permissions.getAsync(Permissions.LOCATION) 
@@ -138,7 +138,16 @@ export default class App extends React.Component {
       await   navigator.geolocation.getCurrentPosition(
         ({ coords: {latitude, longitude } }) =>  this.setState({latitude, longitude})
       )
-       
+      AsyncStorage.getItem("user").then((value) => {   
+        if(value == null){     
+          this.props.navigation.navigate('login')
+        }else{
+          datauser = JSON.parse(value);  
+          this.setState({
+            user:JSON.parse(value)
+          })          
+        } 
+     }).done();  
         fetch("http://green2.tndevs.com/api/api_get_greentype.php?fbclid=IwAR2EqZup4goE4aV2fmVWpDcB-Jsld3K5TROW_8XwjSUysYEDI2vbvzOeWM0")
       .then((response) => response.json())
       .then((responseJson) => {   
@@ -179,12 +188,12 @@ export default class App extends React.Component {
     this.state.image != null ?
       images.push(
         <TouchableOpacity
-        onLongPress ={()=>this.handlerLongClick(this,index)} 
+        onLongPress ={()=>this.handlerLongClick()} 
         //Here is the trick
         activeOpacity={0.6}
         style={styles.button}>
           <Image 
-          source={{ uri: base64.decode(this.state.image) }}
+          source={{ uri: this.state.image }}
           style={{ width: 200, height: 200 ,marginBottom:10}}
         /> 
       </TouchableOpacity>
@@ -193,23 +202,21 @@ export default class App extends React.Component {
 
     return images;
   }
-  handlerLongClick = (index) => { 
-    
+  handlerLongClick = () => { 
+    let me = this
 
     Alert.alert(
-      'Alert Title',
-      'My Alert Msg',
+      'ลบรูปภาพ',
+      ' ',
       [
-        {text: 'Ask me later', onPress: () => console.log('Ask me later pressed')},
         {
-          text: 'Cancel',
+          text: 'ยกเลิก',
           onPress: () => console.log('Cancel Pressed'),
           style: 'cancel',
         },
-        {text: 'OK',  onPress: () => {
-          let newlist = this.state.image.splice(index,1) 
+        {text: 'ยืนยัน',  onPress: () => { 
           this.setState({
-            image: newlist
+            image: null
           })
           } },
       ],
@@ -218,141 +225,119 @@ export default class App extends React.Component {
 
 
   };
-  async buttonclick(status){
-    if(await status == 'เลือกจากคลั่ง'){
-       this.setState({
-         gallery: !this.state.gallery,
-         header: !this.state.header,
-         camera: false 
-        })
-    }else{
-       this.setState({
-        camera: !this.state.camera,
-        header: !this.state.header,
-        gallery: false 
-      })
-    } 
-    this.scroll.scrollToEnd();  
-   }
-   async snap() {        
-    if (this.camera) { 
-       const options = {  exif: true};
-       await this.camera.takePictureAsync(options).then(photo => {
-          photo.exif.Orientation = 1;                    
-          this.setState({ 
-            image: base64.encode(photo.uri)
-          })            
-           });     
-     }
-    }   
-    async myImages(images){ 
-      await this.setState({
-      num:0,
-      image: []
+ 
+   
+ 
+  async pickFromGallery(){  
+    
+    let image = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: 'Images',
+    }).catch(error => console.log(error));
+    this.setState({ 
+      image: image.uri
+    }) 
+  
+}
+async pickFromCamera () {    
+  let image = await ImagePicker.launchCameraAsync({
+    mediaTypes: 'Images',
+  }).catch(error => console.log(error));
+  this.setState({ 
+    image: image.uri
   }) 
-    images.map((item, index) => { 
-      console.log(item.uri)
-        this.setState({
-            num:images.length,
-            image: base64.encode(item.uri)
-        })  
-    }); 
-        
-  }
+}
+formatDate(date) {
+  var d = new Date(date),
+      month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
 
-  imgupload(){
+  if (month.length < 2) month = '0' + month;
+  if (day.length < 2) day = '0' + day;
+
+  return [year, month, day].join('-');
+}
+  submit(){
+    
+
     let perfix_img = Date.now()
     let random = Math.floor(Math.random()*100)
     let img_file_name = perfix_img+"_"+random+".jpg"
-    let data = {
-      fileKey: 'photo',
-      fileName: img_file_name,
-      chunkedMode: false,
-      httpMethod: 'post',
-      mimeType: "image/jpeg",
-      headers: {}
-     }
-
-    let image = []
-    this.state.image.map((item) => { 
-      image = image.concat('data:image/jpeg;base64,' +item)
+    const data = new FormData();
+    data.append('photo', {
+    uri: this.state.image,
+    type: 'image/jpeg',
+    name: img_file_name
+    });    
+    fetch('http://green2.tndevs.com/api_upload2.php', {
+      method: 'post',
+      body: data
     })
-    
-
-    fetch(image, 'http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/api_upload.php', {
-      method: "post",
-      headers: {
-        Accept: "application/x-www-form-urlencoded",
-        Authorization: `Bearer ${this.props.user.token}`,
-      },
-      body: data,
-    }).then(res => res.json())
-      .then(res => {
-        console.log(res);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }
-
-
-  submit(){
-    //this.imgupload()
-    
-
-    let report =  {}; 
-    report.project_name = this.state.project_name
-    report.greentype_id = this.state.greentype_id
-    report.description = this.state.description
-    report.created_date = this.state.created_date  
-    report.date_search = this.state.date_search  
-    report.province_id = this.state.province_id 
-    report.amphur_id = this.state.amphur_id 
-    report.district_id = this.state.district_id 
-    report.moo = this.state.moo
-    report.project_percent = this.state.project_percent 
-    report.number_of_area = this.state.number_of_area 
-    
-    /*
-    report.reportcat_id = this.props.navigation.state.params.reportcat_id
-    report.reportcat_name  = this.props.navigation.state.params.namereport
-    report.user_id  = this.props.navigation.state.params.userName
-*/
-
-    report.report_detail = this.state.report_detail
-    report.report_keyword = this.state.report_keyword
-    report.action = "insert"
-    report.report_img1 = "testinsert.jpg"
-    report.base64Image = "insert"
-
-    let data =  JSON.stringify(report)
-    AsyncStorage.setItem("Datafail", data);
-    fetch("http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/api/api_set_report.php", {
-      method: "post", 
-      body: data,
-    }).then(res => res.json())
-      .then(res => { 
-        if(res.status === "success"){
+    .then(res => {   
+      let report =  {}; 
+      report.uuid = this.state.user.user_id
+      report.project_name = this.state.report_detail
+      report.project_description = this.state.report_keyword
+      report.planting_date = this.formatDate(this.state.date2)
+      report.survey_date = this.formatDate(this.state.date)
+      report.action = 'insert'
+      report.project_img = img_file_name
+      report.project_address = this.state.project_address
+      report.project_moo = this.state.project_moo
+      report.province_id = this.state.province_id 
+      report.amphur_id = this.state.amphur_id 
+      report.district_id = this.state.district_id 
+      report.greentype_id = this.state.greentype_id
+      report.project_area = this.state.number_of_area 
+      report.project_percent = this.state.project_percent
+      report.project_polygon = JSON.stringify(this.state.polygons)
+      let data =  JSON.stringify(report) 
+      fetch("http://green2.tndevs.com/api/api_set_report.php", {
+        method: "post", 
+        body:data,
+      }).then(res => res.json())
+        .then(res => { 
+          if(res.status === "success"){
+            Alert.alert(
+              "สำเร็จ!",
+              "รายงานผลเรียบร้อย!",
+              [{ text: "OK",  onPress: () => { 
+                this.props.navigation.navigate('menu') 
+                }
+              }],
+              { cancelable: false }
+            );
+          }else{
+            let reportfail = [];
+            reportfail.push({ 
+              report_detail : this.state.report_keyword,
+              report_timestamp:this.formatDate(perfix_img),
+              namereport:this.state.report_detail,
+            });
+            AsyncStorage.setItem("Datafail2", JSON.stringify(reportfail));
+          }
+        }).catch(err => { 
+            let reportfail = [];
+            reportfail.push({ 
+              report_detail : this.state.report_keyword,
+              report_timestamp:this.formatDate(perfix_img),
+              namereport:this.state.report_detail,
+            });
+            AsyncStorage.setItem("Datafail2", JSON.stringify(reportfail));  
           Alert.alert(
-            "สำเร็จ!",
-            "รายงานผลเรียบร้อย!",
-            [{ text: "OK"}],
-            { cancelable: false }
+            "ล้มเหลว!",
+            "ไม่สามารถรายงานผลได้!",
+            [{ text: "ตกลง" }]
           );
-        }      
-      })
-      .catch(err => {  
-          AsyncStorage.setItem("Datafail", data);  
-        Alert.alert(
-          "ล้มเหลว!",
-          "ไม่สามารถรายงานผลได้!",
-          [{ text: "OK", onPress: () => that.props.close() }],
-          { cancelable: false }
-        );
-      });   
+        });   
+     })
+
+
+
+    
   }
 
-    render() {  
+    render() {   
       const mapOptions = {
         scrollEnabled: true,
       };
@@ -378,8 +363,8 @@ const district = this.state.district.map( (l, i) => {
         
           <ScrollView ref={(scroll) => {this.scroll = scroll;}} contentContainerStyle={styles.contentContainer}>
         <View >   
-                    <Text h3 style={styles.paragraph}>รายงาน : {this.state.namereport}</Text> 
-                    <MapView
+                    <Text h3 style={styles.paragraph}>{this.state.namereport}</Text> 
+                    <MapView 
           provider={this.props.provider}
           style={{ flex: 1 ,height:300,marginLeft:"5%",marginRight:"5%",marginBottom:"5%" }}
           mapType={MAP_TYPES.HYBRID}
@@ -441,16 +426,16 @@ const district = this.state.district.map( (l, i) => {
         <Input 
            style={styles.inputs}   
            label="เขตการปกครอง" 
-           onChangeText={(keyword) => this.setState({report_keyword:keyword})}/>
+           onChangeText={(keyword) => this.setState({project_address:keyword})}/>
  
 <View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, marginLeft:"3%"}}>
 <Text style={{color: '#86939e',fontSize: 16,fontWeight: 'bold'}}   >เลือกประเภทต้นไม้</Text>
 
          <Picker
-  selectedValue={this.state.language}
+  selectedValue={this.state.greentype_id}
   style={{height: 50, width: "100%"}}
   onValueChange={(itemValue, itemIndex) =>
-    this.setState({language: itemValue})
+    this.setState({greentype_id: itemValue})
   }>
     <Picker.Item label="--เลือก--" value=" " />
     {serviceItems}
@@ -561,25 +546,26 @@ const district = this.state.district.map( (l, i) => {
   
 </Picker>
 </View>  
-<View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, marginLeft:"3%"}}>
+<View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10,  }}>
 <Input 
            style={styles.inputs}   
            label="หมู่" 
-           onChangeText={(keyword) => this.setState({report_keyword:keyword})}/>
+           onChangeText={(keyword) => this.setState({project_moo:keyword})}/>
            </View>
-           <View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, marginLeft:"3%"}}>
-<Input 
+           <View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, }}>
+          <Input 
            style={styles.inputs}   
            label="พื้นที่สิ่งกรีดขวาง %" 
-           onChangeText={(keyword) => this.setState({report_keyword:keyword})}/>
+           onChangeText={(keyword) => this.setState({project_percent:keyword})}/>
            </View>
-           <View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, marginLeft:"3%"}}>
+           <View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, }}>
            <Input 
            style={styles.inputs}   
            label="พื้นที่ปลูก (ตรม.) " 
-           value={this.state.polygons}
-            />
-  </View>
+           value={this.state.number_of_area}
+           onChangeText={(keyword) => this.setState({number_of_area:keyword})}/>
+           
+          </View>
       
  {this._renderImages()} 
  
@@ -587,7 +573,7 @@ const district = this.state.district.map( (l, i) => {
     <View style={{  marginTop:10  }}>
       <View style={styles.buttonContainer}>                   
       <TouchableHighlight
-  onPress={() => this.buttonclick('เลือกจากคลั่ง')} style={styles.btnClickContain}
+  onPress={() => this.pickFromGallery()} style={styles.btnClickContain}
   underlayColor='#042417'>
   <View
     style={styles.btnContainer}>
@@ -600,7 +586,7 @@ const district = this.state.district.map( (l, i) => {
        
        
 <TouchableHighlight
-  onPress={() => this.buttonclick('กล้องถ่ายรูป')} style={styles.btnClickContain}
+  onPress={() => this.pickFromCamera()} style={styles.btnClickContain}
   underlayColor='#042417'>
   <View
     style={styles.btnContainer}>
@@ -612,53 +598,7 @@ const district = this.state.district.map( (l, i) => {
  
       
 
-            {this.state.gallery ? (
-                 <View style={{  alignItems: 'center', justifyContent: 'center',marginTop:5 }}>
-                 <Text style={{marginTop:20}}>
-                {this.state.num} Image selected
-                </Text>
-                <CameraRollPicker initialNumToRender={1} callback={this.myImages.bind(this)}  />
-                 </View>
-            ):null} 
-              {this.state.camera ? (
-               <View style={{ flex: 1,height:200 }}>
-               <Camera ref={ (ref) => {this.camera = ref} } style={{ flex: 1 }} type={this.state.type}>
-                 <View
-                   style={{
-                     flex: 1,
-                     backgroundColor: 'transparent',
-                     flexDirection: 'row',
-                   }}>
-                   <TouchableOpacity
-                     style={{
-                       flex: 0.1,
-                       alignSelf: 'flex-end',
-                       alignItems: 'center',
-                       
-                     }}
-                     onPress={() => {
-                       this.setState({
-                         type:
-                           this.state.type === Camera.Constants.Type.back
-                             ? Camera.Constants.Type.front
-                             : Camera.Constants.Type.back,
-                       });
-                     }}>
-                     <Text style={{ fontSize: 18, marginBottom: 10, color: 'white' }}> Flip </Text>
-                   </TouchableOpacity>
-                   <TouchableOpacity  onPress={this.snap.bind(this)}   style={{
-                       flex: 0.8,
-                       alignSelf: 'flex-end',
-                       alignItems: 'center',
-                       
-                     }} >
-                     <Text style={{ fontSize: 18, marginBottom: 10, color: 'white' }}> capture </Text>
-                   </TouchableOpacity>
-                 </View>
-               </Camera>
-               
-             </View>
-              ):null}  
+            
 
 <View style={{ marginTop: 20,flex: 1, marginBottom: 10 }}> 
     
@@ -753,12 +693,6 @@ const district = this.state.district.map( (l, i) => {
   },
   
   });
-
-  const { width, height } = Dimensions.get('window');
-
-const ASPECT_RATIO = width / height;
-const LATITUDE = 37.78825;
-const LONGITUDE = -122.4324;
-const LATITUDE_DELTA = 0.0922;
-const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
-let id = 0;
+ 
+ 
+let id = 0; 

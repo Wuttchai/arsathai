@@ -1,132 +1,158 @@
-import React, { Component } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Button } from 'react-native';
-import { RNCamera } from 'react-native-camera';
-
-export default class BadInstagramCloneApp extends Component {
-  constructor(props){
-    super(props);
-    this.state = {
-      isVisible: false,
-      pictureType: null,
-      value1: null,
-      value2: null
-    }
-  }
-  initTakingPicture = (pictureType) => {
-    this.setState({
-      isVisible: true,
-      pictureType: pictureType
-    })
-  }
-  async componentDidMount(){ 
-    console.disableYellowBox = true; 
-    const {status} = await Permissions.getAsync(Permissions.LOCATION) 
-    const { statusca } = await Permissions.askAsync(Permissions.CAMERA);
-    this.setState({ hasCameraPermission: statusca === 'granted' });
-     
-      if(status !== 'granted'){
-          const {response} = await Permissions.askAsync(Permissions.LOCATION)
-      }
-      await   navigator.geolocation.getCurrentPosition(
-        ({ coords: {latitude, longitude } }) =>  this.setState({latitude, longitude})
-      )
-
-  }
-  takePicture = async function() {
-    if (this.camera) {
-      const options = { quality: 0.5, base64: true };
-      const data = await this.camera.takePictureAsync(options);
-      console.log(data.uri);
-      let fieldToSave = "value1" // Fallback
-      if (this.state.pictureType === "A") {
-        // Operation you need to do for pictureType A
-        fieldToSave = "value1"
-      } else if (this.state.pictureType === "B") {
-        // Operation you need to do for pictureType B
-        fieldToSave = "value2"
-      } 
-
-      this.setState({
-        isVisible: false,  
-        pictureType: null,
-        [fieldToSave]: data.uri
-      });
-    }
+import React from 'react';
+import { Text, View, Button, AsyncStorage } from 'react-native';
+import { ListItem, Badge  } from 'react-native-elements'
+import { createMaterialTopTabNavigator, createAppContainer} from 'react-navigation';
+import Formreport from '../lisitem2/report'; 
+const logoimg = require('../../../assets/icons/pang.jpg');
+class HomeScreen extends React.Component {
+  static navigationOptions = ({ navigation }) => {
+    return {
+      title: 'รายงาน', 
+    };
   };
   render() {
     return (
-        <View style={styles.subcontainer}>
-          {this.state.isVisible === true
-              ?
-                <View style={styles.container}>
-                  <RNCamera
-                      ref={ref => {
-                        this.camera = ref;
-                      }}
-                      style={styles.preview}
-                      type={RNCamera.Constants.Type.back}
-                      flashMode={RNCamera.Constants.FlashMode.on}
-                      permissionDialogTitle={'Permission to use camera'}
-                      permissionDialogMessage={'We need your permission to use your camera phone'}
-                      onGoogleVisionBarcodesDetected={({ barcodes }) => {
-                        console.log(barcodes);
-                      }}
-                  />
-                  <View style={{ flex: 0, flexDirection: 'row', justifyContent: 'center' }}>
-                    <TouchableOpacity onPress={this.takePicture.bind(this)} style={styles.capture}>
-                      <Text style={{ fontSize: 14 }}> SNAP </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              :
-                <View>
-                  <Button title='PHOTO 1' onPress={() => this.initTakingPicture("A")}/>
-                  <Button title='PHOTO 2' onPress={() => this.initTakingPicture("B")}/>
-                  <Button title='SHOW RESULTS' onPress={this.showResults}/>
-                </View>
-          }
-        </View>
+      <View>
+        <Formreport />
+      </View>
     );
   }
-
-  changeState = () =>{
-    this.setState({isVisible: true})
-  }
-
-  changeState2 = () =>{
-    this.setState({isVisible: true})
-  }
-
-  showResults = () => {
-    console.log('VALUE1: ' + this.state.value1);
-    console.log('VALUE2: ' + this.state.value2);
-  }
-
-
+}
+class SuessScreen extends React.Component {
+  static navigationOptions = ({ navigation }) => {
+    return {
+      title: 'รอรายงาน', 
+    };
+  };
+  state = { 
+    reportfail:[] 
+  } 
+  componentDidMount(){
+    let me = this
+  
+      AsyncStorage.getItem("Datafail2").then((value) => {   
+      if(value != null){     
+        me.setState({
+           reportfail:JSON.parse(value) 
+        })
+      } 
+   }).done();   
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'column',
-    backgroundColor: 'black'
-  },
-  subcontainer: {
-    flex: 1,
-    flexDirection: 'column',
-  },
-  preview: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  capture: {
-    flex: 0,
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    padding: 15,
-    paddingHorizontal: 20,
-    alignSelf: 'center',
-    margin: 20,
-  },
-});
+  render() {
+    console.disableYellowBox = true; 
+    return (
+      <View >
+         {           
+           
+            this.state.reportfail.map((o, x) => (             
+              <ListItem  
+              containerStyle={{  
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#CCCCCC'
+                }} 
+                leftAvatar={{ source: logoimg }}
+                title={o.namereport}
+                subtitle={
+                  <View> 
+                  <Text>{o.report_detail}</Text>
+                  <Text>{o.report_timestamp}</Text> 
+                  <Badge containerStyle={{ position: 'absolute', top: -4, right: -4 }}  value="สถานะรายงาน : ไม่สำเร็จ" status="error" />
+                </View>
+                } 
+              />
+            ))
+          } 
+      </View>
+    );
+  }
+}
+class SettingsScreen extends React.Component {
+  
+  static navigationOptions = ({ navigation }) => {  
+    const { params } = navigation.state; 
+    return {
+      title: 'ประวัติรายงาน', 
+      params
+    };
+  };
+  state = { 
+    reportsess:[] 
+  } 
+  
+  componentDidMount(){
+    
+    let me = this
+    let datauser = []; 
+      AsyncStorage.removeItem("listitem3")
+      AsyncStorage.getItem("user").then((value) => {   
+      if(value == null){     
+        this.props.navigation.navigate('login')
+      }else{
+        datauser = JSON.parse(value);
+        fetch("http://green2.tndevs.com/api/api_get_report.php?uiid="+datauser.user_id)
+      .then((response) =>  response.json())
+      .then((responseJson) => {        
+              me.setState({
+                reportsess:responseJson 
+              })
+      })
+      } 
+   }).done();   
+}
+  async  reportree(project_name,project_id){
+    let data = {}
+    data.project_name = project_name
+    data.project_id = project_id
+     
+      await AsyncStorage.setItem('listitem3', JSON.stringify(data));
+
+          NavigationService.navigate('listitem3')
+           
+    }
+
+
+  render() { 
+    
+    console.disableYellowBox = true;
+    return (
+      <View >
+         {           
+            this.state.reportsess.map((o, x) => (             
+              <ListItem  
+              containerStyle={{  
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#CCCCCC'
+                }}
+                key={o.reportcat_id}  
+                leftAvatar={{ source: logoimg }}
+                title={o.project_name}
+                subtitle={
+                  <View>
+                  <Text>{o.report_detail}</Text>
+                  <Text>{o.report_timestamp}</Text> 
+                  <Badge containerStyle={{ position: 'absolute', top: -4, right: -4 }}  value="สร้างรายงานต้นไม้" status="success" 
+                    onPress={() => this.reportree(o.project_name, o.project_id)}
+                  />
+                  
+                </View>
+                } 
+              />
+            ))
+          }
+           <Button
+          title="Go to Home"
+          onPress={() => this.props.navigation.navigate('Home')}
+        />
+      </View>
+    );
+  }
+}
+const TabNavigator = createMaterialTopTabNavigator({ 
+  Home: HomeScreen,
+  Suess:SuessScreen,
+  Settings: SettingsScreen,
+},{
+  initialRouteName: 'Home' 
+}); 
+export default   createAppContainer(TabNavigator);  

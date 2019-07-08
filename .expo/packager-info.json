@@ -1,9 +1,10 @@
 {
   "packagerPort": 19001,
-  "packagerPid": 16828,
-  "expoServerNgrokUrl": "https://sa-7sk.wuttichai.arsathai.exp.direct",
-  "packagerNgrokUrl": "https://packager.sa-7sk.wuttichai.arsathai.exp.direct",
-  "ngrokPid": 5980,
+  "packagerPid": 13700,
+  "expoServerNgrokUrl": "https://4f-3s5.wuttichai.arsathai.exp.direct",
+  "packagerNgrokUrl": "https://packager.4f-3s5.wuttichai.arsathai.exp.direct",
+  "ngrokPid": 12392,
   "devToolsPort": 19002,
-  "expoServerPort": 19000
+  "expoServerPort": 19000,
+  "webpackServerPort": null
 }

@@ -9,7 +9,8 @@ import {
   TouchableHighlight,
   Image,
   Alert,
-  AsyncStorage
+  AsyncStorage,
+  Linking
 } from 'react-native'; 
 import { Ionicons } from '@expo/vector-icons';
 import SHA1 from 'sha1'; 
@@ -19,8 +20,8 @@ export default class LoginView extends Component {
     
     super(props);
     this.state = {
-      email   : 'admin',
-      password: 'computercenter142536',
+      email   : '',
+      password: '',
     }
     _this = this
   }
@@ -62,6 +63,13 @@ export default class LoginView extends Component {
     .catch((error) => {
       console.log(error);
     });
+  }else{
+    Alert.alert(
+      "ผิดพลาด!",
+      "กรุณากรอกข้อมูลให้ครบ!",
+      [{ text: "OK"}],
+      { cancelable: false }
+    );
   } 
     
   }
@@ -71,7 +79,7 @@ export default class LoginView extends Component {
     this.props.navigation.navigate('App');
   };
   _signorther = async () => {
-    await AsyncStorage.setItem("user",{
+    let datauser = {
       "user_id":"8888",
       "datauser":{
         "userName":"ผู้ใช้ทั่วไป",
@@ -83,9 +91,8 @@ export default class LoginView extends Component {
         "addrDistrict":""
     ,"addrProvince":""
     }
-  });
-  await AsyncStorage.setItem('userToken', 'abc');
-    this.props.navigation.navigate('App');
+  }
+  this._signInAsync(JSON.stringify(datauser)); 
   };
   render() {
     return (
@@ -115,7 +122,7 @@ export default class LoginView extends Component {
           <Button title="เข้าสู่ระบบ" color="#83c336" onPress={() => this.onClickListener()}/>
           </TouchableHighlight>
 
-        <TouchableHighlight style={{justifyContent:'center',alignItems: 'center',marginBottom:20}} onPress={() => this.onClickListener('restore_password')}>
+        <TouchableHighlight style={{justifyContent:'center',alignItems: 'center',marginBottom:20}} onPress={() => Linking.openURL("http://www.deqp.go.th/service-portal/tsm-network-system/member-create")}>
             <Text >สมัครสมาชิก ทสม. | ลืมรหัสผ่าน</Text>
         </TouchableHighlight>
 
