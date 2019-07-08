@@ -46,6 +46,7 @@ export default class App extends React.Component {
     console.disableYellowBox = true; 
     const {status} = await Permissions.getAsync(Permissions.LOCATION) 
     const { statusca } = await Permissions.askAsync(Permissions.CAMERA);
+    const { testtt } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
     this.setState({ hasCameraPermission: statusca === 'granted' });
      
       if(status !== 'granted'){

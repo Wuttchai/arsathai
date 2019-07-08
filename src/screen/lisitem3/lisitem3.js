@@ -479,11 +479,7 @@ class SuessScreen extends React.Component {
                 } 
               />
             ))
-          }
-           <Button
-          title="Go to Home"
-          onPress={() => this.props.navigation.navigate('screen')}
-        />
+          } 
       </View>
     );
   }

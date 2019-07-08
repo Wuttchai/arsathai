@@ -30,13 +30,15 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
+        "NSPhotoLibraryUsageDescription",
         "CAMERA",
         "MANAGE_DOCUMENTS",
         "READ_CONTACTS",
         "USE_FINGERPRINT",
         "VIBRATE",
         "WAKE_LOCK",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE"
       ]
     }
     

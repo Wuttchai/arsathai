@@ -292,7 +292,7 @@ formatDate(date) {
       report.project_percent = this.state.project_percent
       report.project_polygon = JSON.stringify(this.state.polygons)
       let data =  JSON.stringify(report) 
-      fetch("http://green2.tndevs.com/api/api_set_report.php", {
+      fetch("http://green2.tndevs.com/api/api_set_report.phpx", {
         method: "post", 
         body:data,
       }).then(res => res.json())
@@ -313,17 +313,42 @@ formatDate(date) {
               report_detail : this.state.report_keyword,
               report_timestamp:this.formatDate(perfix_img),
               namereport:this.state.report_detail,
-            });
-            AsyncStorage.setItem("Datafail2", JSON.stringify(reportfail));
+            }); 
+            let datafail = []  
+                
+            AsyncStorage.getItem("Datafail2").then((value) => {   
+              if(value == null){  
+                datafail = JSON.stringify(reportfail)   
+                AsyncStorage.setItem("Datafail2", datafail);
+              }else{  
+                datafail = JSON.parse(value).concat(reportfail)
+                
+                AsyncStorage.setItem("Datafail2", JSON.stringify(datafail));
+              } 
+           }).done();
+
+
+           
           }
         }).catch(err => { 
-            let reportfail = [];
-            reportfail.push({ 
-              report_detail : this.state.report_keyword,
-              report_timestamp:this.formatDate(perfix_img),
-              namereport:this.state.report_detail,
-            });
-            AsyncStorage.setItem("Datafail2", JSON.stringify(reportfail));  
+          let reportfail = [];
+          reportfail.push({ 
+            report_detail : this.state.report_keyword,
+            report_timestamp:this.formatDate(perfix_img),
+            namereport:this.state.report_detail,
+          }); 
+          let datafail = []  
+              
+          AsyncStorage.getItem("Datafail2").then((value) => {   
+            if(value == null){  
+              datafail = JSON.stringify(reportfail)   
+              AsyncStorage.setItem("Datafail2", datafail);
+            }else{  
+              datafail = JSON.parse(value).concat(reportfail)
+              
+              AsyncStorage.setItem("Datafail2", JSON.stringify(datafail));
+            } 
+         }).done();  
           Alert.alert(
             "ล้มเหลว!",
             "ไม่สามารถรายงานผลได้!",
