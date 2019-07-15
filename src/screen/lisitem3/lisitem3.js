@@ -39,7 +39,9 @@ class HomeScreen extends React.Component {
             project_percent:0,
             user:[],
             lat:null,
-            Lng:null
+            Lng:null,
+            latitude:null,
+            longitude:null,
         }
       }   
       static navigationOptions = { 
@@ -56,7 +58,14 @@ class HomeScreen extends React.Component {
         
         console.disableYellowBox = true; 
         let me = this 
+        const {status} = await Permissions.getAsync(Permissions.LOCATION)
         const { statusca } = await Permissions.askAsync(Permissions.CAMERA); 
+        if(status !== 'granted'){
+          const {response} = await Permissions.askAsync(Permissions.LOCATION)
+      }
+      await   navigator.geolocation.getCurrentPosition(
+        ({ coords: {latitude, longitude } }) =>  this.setState({latitude, longitude})
+      )
         this.setState({ 
           hasCameraPermission: statusca === 'granted', 
         });
@@ -168,8 +177,8 @@ class HomeScreen extends React.Component {
         .then(res => {    
           let report =  {}; 
           report.tree_id = this.state.greentype_id
-          report.pt_lat = this.state.lat
-          report.pt_lng = this.state.Lng
+          report.pt_lat = this.state.latitude.toString();
+          report.pt_lng = this.state.longitude.toString();
           report.project_id = this.state.dataitem.project_id 
           report.action = 'insert' 
           report.survey_date = date
@@ -200,7 +209,16 @@ class HomeScreen extends React.Component {
                   report_detail : this.state.namereport,
                   report_timestamp:this.formatDate(perfix_img), 
                 });
-                AsyncStorage.setItem("Datafail3", JSON.stringify(reportfail)); 
+                AsyncStorage.getItem("Datafail3").then((value) => {   
+                  if(value == null){  
+                    datafail = JSON.stringify(reportfail)   
+                    AsyncStorage.setItem("Datafail3", datafail);
+                  }else{  
+                    datafail = JSON.parse(value).concat(reportfail)
+                    
+                    AsyncStorage.setItem("Datafail3", JSON.stringify(datafail));
+                  } 
+               }).done(); 
               }          
             }).catch(err => { 
               let reportfail = [];
@@ -208,7 +226,16 @@ class HomeScreen extends React.Component {
                 report_detail : this.state.namereport,
                 report_timestamp:this.formatDate(perfix_img), 
               });
-              AsyncStorage.setItem("Datafail3", JSON.stringify(reportfail));  
+              AsyncStorage.getItem("Datafail3").then((value) => {   
+                if(value == null){  
+                  datafail = JSON.stringify(reportfail)   
+                  AsyncStorage.setItem("Datafail3", datafail);
+                }else{  
+                  datafail = JSON.parse(value).concat(reportfail)
+                  
+                  AsyncStorage.setItem("Datafail3", JSON.stringify(datafail));
+                } 
+             }).done(); 
             Alert.alert(
               "ล้มเหลว!",
               "ไม่สามารถรายงานผลได้!",
@@ -222,7 +249,16 @@ class HomeScreen extends React.Component {
             report_detail : this.state.namereport,
             report_timestamp:this.formatDate(perfix_img), 
           });
-          AsyncStorage.setItem("Datafail3", JSON.stringify(reportfail));  
+          AsyncStorage.getItem("Datafail3").then((value) => {   
+            if(value == null){  
+              datafail = JSON.stringify(reportfail)   
+              AsyncStorage.setItem("Datafail3", datafail);
+            }else{  
+              datafail = JSON.parse(value).concat(reportfail)
+              
+              AsyncStorage.setItem("Datafail3", JSON.stringify(datafail));
+            } 
+         }).done(); 
         Alert.alert(
           "ล้มเหลว!",
           "ไม่สามารถรายงานผลได้!",
@@ -286,18 +322,24 @@ class HomeScreen extends React.Component {
           onDateChange={(date) => {this.setState({date: date})}}
         />
   </View> 
-          <Input 
-             style={styles.inputs}   
-             label="Lat" 
-             onChangeText={(detail) => this.setState({lat:detail})}/>
+          {
+            this.state.latitude != null ? <Input 
+            style={styles.inputs}   
+            label="Lat" 
+            value={this.state.latitude.toString()} 
+            />   : null
+          }
+         
          
    
   
   <View  >
-  <Input 
+  { this.state.longitude != null ? <Input 
              style={styles.inputs} 
              label="Lng" 
-             onChangeText={(keyword) => this.setState({Lng:keyword})}/> 
+             value={this.state.longitude.toString()}
+             />  : null }
+  
   </View>
                
                
@@ -401,7 +443,7 @@ class SettingsScreen extends React.Component {
         datauser = JSON.parse(value);
         fetch("http://green2.tndevs.com/api/api_get_tree.php?uiid="+datauser.user_id)
       .then((response) =>  response.json())
-      .then((responseJson) => {        
+      .then((responseJson) => {     
               me.setState({
                 reportsess:responseJson 
               })
@@ -433,7 +475,7 @@ class SettingsScreen extends React.Component {
                 title={o.project_name}
                 subtitle={
                   <View>
-                  <Text>{o.report_detail}</Text>
+                  <Text>{o.tree_name}</Text>
                   <Text>{o.report_timestamp}</Text> 
                   <Badge containerStyle={{ position: 'absolute', top: -4, right: -4 }}  value="สร้างรายงานต้นไม้" status="success" 
                     onPress={() => this.reportree(o.project_name)}

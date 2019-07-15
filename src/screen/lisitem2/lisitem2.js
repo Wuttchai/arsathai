@@ -67,16 +67,52 @@ class HomeScreen extends React.Component {
       editing: null,
       creatingHole: false,
     });
+    this.calculateDistance(editing);
   }
 
-  createHole() {
+  createHole(polygons) {
     
       this.setState({
         polygons:[],
         editing:null, 
       })
   }
+  calculateDistance(polygons) { 
+    let datalat = [];
+    let datalon = [];
+     polygons.coordinates.map(polygon => (
+      datalat = datalat.concat(polygon.latitude),
+      datalon = datalon.concat(polygon.latitude)
+      
+    )) 
+    console.log(datalat,datalon)
 
+    const lat1 = datalat[0];
+    const lon1 = datalon[0];
+  
+    const lat2 = datalat[1];
+    const lon2 = datalon[1];
+   
+    const lat3 = datalat[2];
+    const lon3 = datalon[2];
+
+    const pomath1 = lat1 * (Math.PI / 180);
+    const pomath2 = lat2 * (Math.PI / 180);
+    const pomath3 = lat3 * (Math.PI / 180);
+
+
+    const po1 = (lat2 - lat1) * (Math.PI / 180);
+    const po2 = (lon2 - lon1) * (Math.PI / 180); 
+  
+    const a = (Math.sin(po1 / 2) * Math.sin(po1 / 2)) + ((Math.cos(pomath1) * Math.cos(pomath2)) * (Math.sin(po2 / 2) * Math.sin(po2 / 2)));
+    
+
+              
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const R = 6371e3;
+    const distance = R * c;
+    return distance; // in meters
+  }
   onPress(e) {
     const { editing, creatingHole } = this.state;
     if (!editing) { 
@@ -308,7 +344,16 @@ formatDate(date) {
               report_timestamp:this.formatDate(perfix_img),
               namereport:this.state.report_detail,
             });
-            AsyncStorage.setItem("Datafail2", JSON.stringify(reportfail));
+            AsyncStorage.getItem("Datafail2").then((value) => {   
+              if(value == null){  
+                datafail = JSON.stringify(reportfail)   
+                AsyncStorage.setItem("Datafail2", datafail);
+              }else{  
+                datafail = JSON.parse(value).concat(reportfail)
+                
+                AsyncStorage.setItem("Datafail2", JSON.stringify(datafail));
+              } 
+           }).done(); 
           }
         }).catch(err => { 
             let reportfail = [];
@@ -317,7 +362,19 @@ formatDate(date) {
               report_timestamp:this.formatDate(perfix_img),
               namereport:this.state.report_detail,
             });
-            AsyncStorage.setItem("Datafail2", JSON.stringify(reportfail));  
+
+            AsyncStorage.getItem("Datafail2").then((value) => {   
+              if(value == null){  
+                datafail = JSON.stringify(reportfail)   
+                AsyncStorage.setItem("Datafail2", datafail);
+              }else{  
+                datafail = JSON.parse(value).concat(reportfail)
+                
+                AsyncStorage.setItem("Datafail2", JSON.stringify(datafail));
+              } 
+           }).done(); 
+
+
           Alert.alert(
             "ล้มเหลว!",
             "ไม่สามารถรายงานผลได้!",
@@ -331,7 +388,16 @@ formatDate(date) {
         report_timestamp:this.formatDate(perfix_img),
         namereport:this.state.report_detail,
       });
-      AsyncStorage.setItem("Datafail2", JSON.stringify(reportfail));  
+      AsyncStorage.getItem("Datafail2").then((value) => {   
+        if(value == null){  
+          datafail = JSON.stringify(reportfail)   
+          AsyncStorage.setItem("Datafail2", datafail);
+        }else{  
+          datafail = JSON.parse(value).concat(reportfail)
+          
+          AsyncStorage.setItem("Datafail2", JSON.stringify(datafail));
+        } 
+     }).done();  
     Alert.alert(
       "ล้มเหลว!",
       "ไม่สามารถรายงานผลได้!",
@@ -341,8 +407,7 @@ formatDate(date) {
  
   }
 
-  render() {   
-    
+  render() {    
     const mapOptions = {
       scrollEnabled: true,
     };
@@ -695,7 +760,7 @@ class SettingsScreen extends React.Component {
         datauser = JSON.parse(value);
         fetch("http://green2.tndevs.com/api/api_get_report.php?uiid="+datauser.user_id)
       .then((response) =>  response.json())
-      .then((responseJson) => {        
+      .then((responseJson) => {      
               me.setState({
                 reportsess:responseJson 
               })
@@ -729,10 +794,10 @@ class SettingsScreen extends React.Component {
                 }}
                 key={o.reportcat_id}  
                 leftAvatar={{ source: logoimg }}
-                title={o.project_name}
+                 
                 subtitle={
                   <View>
-                  <Text>{o.report_detail}</Text>
+                  <Text>{o.project_name}</Text>
                   <Text>{o.report_timestamp}</Text> 
                   <Badge containerStyle={{ position: 'absolute', top: -4, right: -4 }}  value="สร้างรายงานต้นไม้" status="success" 
                     onPress={() => this.reportree(o.project_name, o.project_id)}
