@@ -292,7 +292,7 @@ formatDate(date) {
       report.project_percent = this.state.project_percent
       report.project_polygon = JSON.stringify(this.state.polygons)
       let data =  JSON.stringify(report) 
-      fetch("http://green2.tndevs.com/api/api_set_report.phpx", {
+      fetch("http://green2.tndevs.com/api/api_set_report.php", {
         method: "post", 
         body:data,
       }).then(res => res.json())

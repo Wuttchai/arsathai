@@ -11,10 +11,10 @@ import test from './screen/testlogin/index';
 
 const AppStack = createStackNavigator({ 
   
-  
+  listitem2:{ screen:listitem2},
     menu:{ screen:menu},   
     listitem:{ screen:listitem},
-    listitem2:{ screen:listitem2},
+    
     listitem3:{ screen:listitem3},
     formreport:{ screen:formreport},
     map:{ screen:map},  

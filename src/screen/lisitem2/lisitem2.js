@@ -70,33 +70,16 @@ class HomeScreen extends React.Component {
   }
 
   createHole() {
-    const { editing, creatingHole } = this.state;
-    if (!creatingHole) {
+    
       this.setState({
-        creatingHole: true,
-        editing: {
-          ...editing,
-          holes: [...editing.holes, []],
-        },
-      });
-    } else {
-      const holes = [...editing.holes];
-      if (holes[holes.length - 1].length === 0) {
-        holes.pop();
-        this.setState({
-          editing: {
-            ...editing,
-            holes,
-          },
-        });
-      }
-      this.setState({ creatingHole: false });
-    }
+        polygons:[],
+        editing:null, 
+      })
   }
 
   onPress(e) {
     const { editing, creatingHole } = this.state;
-    if (!editing) {
+    if (!editing) { 
       this.setState({
         editing: {
           id: id++,
@@ -341,11 +324,25 @@ formatDate(date) {
             [{ text: "ตกลง" }]
           );
         });   
-     })
+     }).catch(err => { 
+      let reportfail = [];
+      reportfail.push({ 
+        report_detail : this.state.report_keyword,
+        report_timestamp:this.formatDate(perfix_img),
+        namereport:this.state.report_detail,
+      });
+      AsyncStorage.setItem("Datafail2", JSON.stringify(reportfail));  
+    Alert.alert(
+      "ล้มเหลว!",
+      "ไม่สามารถรายงานผลได้!",
+      [{ text: "ตกลง" }]
+    );
+  });
  
   }
 
   render() {   
+    
     const mapOptions = {
       scrollEnabled: true,
     };
@@ -412,9 +409,7 @@ return <Picker.Item label={l.district_name} value={l.district_id} />
             onPress={() => this.createHole()}
             style={[styles.bubble, styles.button]}
           >
-            <Text>
-              {this.state.creatingHole ? 'Finish Hole' : 'Create Hole'}
-            </Text>
+            <Text> ล้าง </Text>
           </TouchableOpacity>
         )}
         {this.state.editing && (
@@ -422,7 +417,7 @@ return <Picker.Item label={l.district_name} value={l.district_id} />
             onPress={() => this.finish()}
             style={[styles.bubble, styles.button]}
           >
-            <Text>Finish</Text>
+            <Text>เสร็จ</Text>
           </TouchableOpacity>
         )}
       </View>

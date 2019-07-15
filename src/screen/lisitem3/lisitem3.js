@@ -179,7 +179,7 @@ class HomeScreen extends React.Component {
           report.pt_ref1 = this.state.pt_ref1
           console.log(report)
           let data =  JSON.stringify(report) 
-          fetch("http://green2.tndevs.com/api/api_set_tree.phpx", {
+          fetch("http://green2.tndevs.com/api/api_set_tree.php", {
             method: "post", 
             body: data,
           }).then(res =>  res.json())
@@ -216,7 +216,22 @@ class HomeScreen extends React.Component {
             );
           });   
           
-        })  
+        }).catch(err => { 
+          let reportfail = [];
+          reportfail.push({ 
+            report_detail : this.state.namereport,
+            report_timestamp:this.formatDate(perfix_img), 
+          });
+          AsyncStorage.setItem("Datafail3", JSON.stringify(reportfail));  
+        Alert.alert(
+          "ล้มเหลว!",
+          "ไม่สามารถรายงานผลได้!",
+          [{ text: "ตกลง" }]
+        );
+      });
+        
+        
+
       }
       render() {   
  

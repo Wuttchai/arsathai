@@ -174,7 +174,7 @@ async pickFromCamera () {
       report.pt_ref1 = this.state.pt_ref1
       console.log(report)
       let data =  JSON.stringify(report) 
-      fetch("http://green2.tndevs.com/api/api_set_tree.phpx", {
+      fetch("http://green2.tndevs.com/api/api_set_tree.php", {
         method: "post", 
         body: data,
       }).then(res =>  res.json())

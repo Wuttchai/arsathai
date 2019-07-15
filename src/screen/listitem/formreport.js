@@ -166,8 +166,47 @@ export default class App extends React.Component {
         method: 'post',
         body: data
       }).then(res => {
-        me.setState({image:me.state.image.concat(img_file_name)}) 
-        console.log(this.state.image)
+        me.setState({image:me.state.image.concat(img_file_name)})  
+      }) .catch(err => {  
+        let date = new Date(); 
+        let month = ''; 
+        let day = ''; 
+          if(date.getMonth() <= 9 ){
+           month = '0'+date.getMonth()
+          }else{
+             month = date.getMonth() 
+          }
+          if(date.getDate() <= 9 ){
+            day = '0'+date.getDate() 
+          }else{
+            day = date.getDate() 
+          }
+          let timestamp = date.getFullYear()+"-"+month+"-"+day
+          let reportfail = [];
+          reportfail.push({
+            reportcat_thname: me.props.navigation.state.params.namereport,
+            report_detail : me.state.report_detail,
+            report_timestamp:timestamp,
+            report_icon:me.props.navigation.state.params.iconreport,
+          }); 
+          
+          let datafail = []  
+          
+          AsyncStorage.getItem("Datafail").then((value) => {   
+            if(value == null){  
+              datafail = JSON.stringify(reportfail)   
+              AsyncStorage.setItem("Datafail", datafail);
+            }else{  
+              datafail = JSON.parse(value).concat(reportfail)
+              
+              AsyncStorage.setItem("Datafail", JSON.stringify(datafail));
+            } 
+         }).done(); 
+           Alert.alert(
+          "ล้มเหลว!",
+          "ไม่สามารถรายงานผลได้!",
+          [{ text: "ตกลง" }]
+        );
       });
           
     })
