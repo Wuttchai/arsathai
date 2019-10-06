@@ -1,11 +1,14 @@
 import React from "react";
-import { View,Button, Picker, Image, StyleSheet  , ScrollView, TouchableOpacity, Alert, TouchableHighlight, AsyncStorage } from "react-native";   
+import { View,Button, Picker, Image, StyleSheet,ActivityIndicator  , ScrollView, TouchableOpacity, Alert, TouchableHighlight, AsyncStorage } from "react-native";   
  import { ListItem, Badge,Input,Text  } from 'react-native-elements'; 
 import DatePicker from 'react-native-datepicker' 
 import { Ionicons } from '@expo/vector-icons';  
 import { Camera } from 'expo-camera';
 import {Permissions, ImagePicker} from 'expo'
-import { createMaterialTopTabNavigator, createAppContainer } from 'react-navigation'; 
+import MapView, {
+  MAP_TYPES 
+} from 'react-native-maps'; 
+import { createMaterialTopTabNavigator, createAppContainer, NavigationEvents } from 'react-navigation'; 
 const logoimg = require('../../../assets/icons/tree.jpg');
 class HomeScreen extends React.Component {
     static navigationOptions = ({ navigation }) => {
@@ -14,7 +17,7 @@ class HomeScreen extends React.Component {
         };
       };
       constructor(props) {
-        super(props);   
+        super(props);    
         this.scroll = null;
         this.state = {
             namereport:'สร้างข้อมูลต้นไม้',
@@ -25,23 +28,25 @@ class HomeScreen extends React.Component {
             check2:false, 
             report_detail:"",
             report_keyword:"",
-            type: Camera.Constants.Type.back, 
-            listtree:[],
+            type: Camera.Constants.Type.back,  
             province:[],
             amphur:[],
             district:[],
             project_moo:null,
             polygons: [],
             pt_ref1:null,
+            ptd_ref1:null,
+            ptd_ref2:null,
+            ptd_ref3:null,
             editing: null,
             creatingHole: false, 
             greentype_id:null, 
-            project_percent:0,
-            user:[],
-            lat:null,
-            Lng:null,
+            project_percent:null,
+            user:[], 
             latitude:null,
             longitude:null,
+            listtree:[],
+            markers:[],
         }
       }   
       static navigationOptions = { 
@@ -57,14 +62,26 @@ class HomeScreen extends React.Component {
       async componentDidMount(){ 
         
         console.disableYellowBox = true; 
+        
         let me = this 
+        AsyncStorage.getItem("user").then((value) => {   
+          if(value == null){     
+            this.props.navigation.navigate('login')
+          }else{
+            me.setState({
+              userdata:JSON.parse(value)
+            })  
+          }
+        });
         const {status} = await Permissions.getAsync(Permissions.LOCATION)
         const { statusca } = await Permissions.askAsync(Permissions.CAMERA); 
         if(status !== 'granted'){
           const {response} = await Permissions.askAsync(Permissions.LOCATION)
       }
       await   navigator.geolocation.getCurrentPosition(
-        ({ coords: {latitude, longitude } }) =>  this.setState({latitude, longitude})
+        ({ coords: {latitude, longitude } }) =>  this.setState({latitude, longitude,
+          markers: [{ latitude: latitude, longitude: longitude }]
+        })
       )
         this.setState({ 
           hasCameraPermission: statusca === 'granted', 
@@ -77,7 +94,13 @@ class HomeScreen extends React.Component {
               })  
             } 
          }).done();  
-         
+         fetch("http://www.greenarea.deqp.go.th/api/api_get_tree.php?uiid")
+         .then((response) =>  response.json())
+         .then((responseJson) => {      
+                 me.setState({
+                  listtree:responseJson 
+                 })
+         })
           
       }
       _renderImages() {
@@ -159,8 +182,41 @@ class HomeScreen extends React.Component {
     
       return [year, month, day].join('-');
     }
-      submit(){   
-        let date = this.formatDate(this.state.date) 
+      submit(){  
+        if(this.state.greentype_id == null){ 
+          Alert.alert(
+            'ล้มเหลว !',
+            'กรุณาเลือกพรรณไม้',
+            [ 
+              {
+                text: 'ยืนยัน'
+              },
+            ], 
+          );
+        }else if(this.state.project_moo == null){ 
+          Alert.alert(
+            'ล้มเหลว !',
+            'กรุณาใส่ความสูง',
+            [ 
+              {
+                text: 'ยืนยัน'
+              },
+            ], 
+          );
+        }else if(this.state.project_percent == null){ 
+          Alert.alert(
+            'ล้มเหลว !',
+            'กรุณาใส่เส้นรอบวง',
+            [ 
+              {
+                text: 'ยืนยัน'
+              },
+            ], 
+          );
+        }else if(this.state.image == null){ 
+          this.submitform('null')
+        }else{ 
+         
         let perfix_img = Date.now()
         let random = Math.floor(Math.random()*100)
         let img_file_name = perfix_img+"_"+random+".jpg"
@@ -170,78 +226,12 @@ class HomeScreen extends React.Component {
         type: 'image/jpeg',
         name: img_file_name
         });    
-        fetch('http://green2.tndevs.com/api_upload.php', {
+        fetch('http://www.greenarea.deqp.go.th/api_upload.php', {
           method: 'post',
           body: data
         })
         .then(res => {    
-          let report =  {}; 
-          report.tree_id = this.state.greentype_id
-          report.pt_lat = this.state.latitude.toString();
-          report.pt_lng = this.state.longitude.toString();
-          report.project_id = this.state.dataitem.project_id 
-          report.action = 'insert' 
-          report.survey_date = date
-          report.project_img = img_file_name
-          report.project_address = this.state.project_moo
-          report.project_moo = this.state.project_percent
-          report.pt_ref1 = this.state.pt_ref1
-          console.log(report)
-          let data =  JSON.stringify(report) 
-          fetch("http://green2.tndevs.com/api/api_set_tree.php", {
-            method: "post", 
-            body: data,
-          }).then(res =>  res.json())
-            .then(res => { 
-              console.log(res)
-              if(res.status === "success"){
-                Alert.alert(
-                  "สำเร็จ!",
-                  "รายงานผลเรียบร้อย!",
-                  [{ text: "OK",  onPress: () => { 
-                    this.props.navigation.navigate('Settings')
-                    }}],
-                  { cancelable: false }
-                );
-              }else{
-                let reportfail = [];
-                reportfail.push({ 
-                  report_detail : this.state.namereport,
-                  report_timestamp:this.formatDate(perfix_img), 
-                });
-                AsyncStorage.getItem("Datafail3").then((value) => {   
-                  if(value == null){  
-                    datafail = JSON.stringify(reportfail)   
-                    AsyncStorage.setItem("Datafail3", datafail);
-                  }else{  
-                    datafail = JSON.parse(value).concat(reportfail)
-                    
-                    AsyncStorage.setItem("Datafail3", JSON.stringify(datafail));
-                  } 
-               }).done(); 
-              }          
-            }).catch(err => { 
-              let reportfail = [];
-              reportfail.push({ 
-                report_detail : this.state.namereport,
-                report_timestamp:this.formatDate(perfix_img), 
-              });
-              AsyncStorage.getItem("Datafail3").then((value) => {   
-                if(value == null){  
-                  datafail = JSON.stringify(reportfail)   
-                  AsyncStorage.setItem("Datafail3", datafail);
-                }else{  
-                  datafail = JSON.parse(value).concat(reportfail)
-                  
-                  AsyncStorage.setItem("Datafail3", JSON.stringify(datafail));
-                } 
-             }).done(); 
-            Alert.alert(
-              "ล้มเหลว!",
-              "ไม่สามารถรายงานผลได้!",
-              [{ text: "ตกลง" }]
-            );
-          });   
+            this.submitform(img_file_name)
           
         }).catch(err => { 
           let reportfail = [];
@@ -259,24 +249,132 @@ class HomeScreen extends React.Component {
               AsyncStorage.setItem("Datafail3", JSON.stringify(datafail));
             } 
          }).done(); 
+         
         Alert.alert(
           "ล้มเหลว!",
           "ไม่สามารถรายงานผลได้!",
           [{ text: "ตกลง" }]
         );
       });
+    }
+      }
+      submitform(img_file_name){
         
+        let date = this.formatDate(this.state.date)
+        let report =  {}; 
+        report.uuid = this.state.userdata.user_id
+        report.tree_id = this.state.greentype_id
+        this.state.markers.map((item,i) => {
+        report.pt_lat = item.latitude.toString();
+        report.pt_lng = item.longitude.toString();
+        }) 
+        report.project_id = this.state.dataitem.project_id 
+        report.action = 'insert' 
+        report.survey_date = date
+        report.project_img = img_file_name
+        report.project_address = this.state.project_moo
+        report.project_moo = this.state.project_percent
+        report.pt_ref1 = this.state.pt_ref1
         
-
+        report.ptd_ref1 = this.state.ptd_ref1  
+        report.ptd_ref2 = this.state.ptd_ref2  
+        report.ptd_ref3 = this.state.ptd_ref3  
+        
+        let data =  JSON.stringify(report) 
+        fetch("http://www.greenarea.deqp.go.th/api/api_set_tree.php", {
+          method: "post", 
+          body: data,
+        }).then(res => {   
+              Alert.alert(
+                "สำเร็จ!",
+                "รายงานผลเรียบร้อย!",
+                [{ text: "OK",  onPress: () => {
+                  this.setState({
+                    num:0, 
+                    image: null,
+                    date:new Date(), 
+                    check1:false,
+                    check2:false, 
+                    report_detail:"",
+                    report_keyword:"",
+                    type: Camera.Constants.Type.back,  
+                    province:[],
+                    markers: [{ latitude: this.state.latitude, longitude: this.state.longitude }],
+                    amphur:[],
+                    district:[],
+                    project_moo:null,
+                    polygons: [],
+                    pt_ref1:null,
+                    ptd_ref1:null,
+                    ptd_ref2:null,
+                    ptd_ref3:null,
+                    editing: null,
+                    creatingHole: false, 
+                    greentype_id:null, 
+                    project_percent:null,
+                    user:[],  
+                  }) 
+                  }
+                }],
+                { cancelable: false }
+              );       
+          }).catch(err => {  
+            let reportfail = [];
+            reportfail.push({ 
+              report_detail : this.state.namereport,
+              report_timestamp:this.formatDate(perfix_img), 
+            });
+            AsyncStorage.getItem("Datafail3").then((value) => {   
+              if(value == null){  
+                datafail = JSON.stringify(reportfail)   
+                AsyncStorage.setItem("Datafail3", datafail);
+              }else{  
+                datafail = JSON.parse(value).concat(reportfail)
+                
+                AsyncStorage.setItem("Datafail3", JSON.stringify(datafail));
+              } 
+           }).done(); 
+          Alert.alert(
+            "ล้มเหลว!",
+            "ไม่สามารถรายงานผลได้!",
+            [{ text: "ตกลง" }]
+          );
+        });  
+      }
+      addMarker(coordinates) {
+        this.setState({
+          markers: [{ latitude: coordinates.latitude, longitude: coordinates.longitude }] 
+        });
       }
       render() {   
- 
-        return (
+        const treeItems = this.state.listtree.map( (l, i) => {
+         
+          return <Picker.Item label={l.tree_name} value={l.tree_id} />
+      });
+        return ( this.state.latitude !== null ?
           
             <ScrollView ref={(scroll) => {this.scroll = scroll;}} contentContainerStyle={styles.contentContainer}>
           <View >   
                       <Text h3 style={styles.paragraph}>{this.state.namereport}</Text> 
-        
+
+                      <MapView 
+      style={{ flex: 1 ,height:300,marginLeft:"5%",marginRight:"5%",marginBottom:"5%" }}
+      mapType={MAP_TYPES.HYBRID}
+      initialRegion={{
+        latitude:this.state.latitude,  
+        longitude:this.state.longitude,
+        latitudeDelta: 0.0022,
+        longitudeDelta: 0.0121,
+      }} 
+        onPress={event => this.addMarker(event.nativeEvent.coordinate)}
+      > 
+        {this.state.markers.map(marker =>
+          (<MapView.Marker
+            key={marker.index}
+            coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+          />)
+        )}
+      </MapView>
         
           <View style={{ flexDirection: 'column', marginBottom: 10, marginLeft:"2%"}}>
   <Text style={{color: '#86939e',fontSize: 16,fontWeight: 'bold'}}   >พรรณไม้</Text>
@@ -288,7 +386,7 @@ class HomeScreen extends React.Component {
       this.setState({greentype_id: itemValue})
     }>
       <Picker.Item label="เลือกพรรณไม้" value=" " />
-      <Picker.Item label="สัก" value="1" />
+      {treeItems}
   
     
     
@@ -322,25 +420,10 @@ class HomeScreen extends React.Component {
           onDateChange={(date) => {this.setState({date: date})}}
         />
   </View> 
-          {
-            this.state.latitude != null ? <Input 
-            style={styles.inputs}   
-            label="Lat" 
-            value={this.state.latitude.toString()} 
-            />   : null
-          }
+        
          
          
    
-  
-  <View  >
-  { this.state.longitude != null ? <Input 
-             style={styles.inputs} 
-             label="Lng" 
-             value={this.state.longitude.toString()}
-             />  : null }
-  
-  </View>
                
                
    
@@ -349,7 +432,9 @@ class HomeScreen extends React.Component {
   <Input 
              style={styles.inputs}   
              label="ความสูง" 
-             onChangeText={(keyword) => this.setState({project_moo:keyword})}/>
+             onChangeText={(keyword) => this.setState({project_moo:keyword})}
+             value={this.state.project_moo}
+             />
             
            
              
@@ -358,8 +443,10 @@ class HomeScreen extends React.Component {
             <Input 
              style={styles.inputs}   
              label="เส้นรอบวง" 
-             onChangeText={(keyword) => this.setState({project_percent:keyword})}/>
-           
+             onChangeText={(keyword) => this.setState({project_percent:keyword})}
+             value={this.state.project_percent}
+             />
+            
              
             </View>
            
@@ -370,7 +457,38 @@ class HomeScreen extends React.Component {
              value={this.state.pt_ref1}
              onChangeText={(keyword) => this.setState({pt_ref1:keyword})}/>
               </View>
-  
+              <View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10 }}>
+             <Input 
+             style={styles.inputs}   
+             label="ref1" 
+             value={this.state.ptd_ref1}
+             onChangeText={(keyword) => this.setState({ptd_ref1:keyword})}/>
+              </View>
+              <View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10 }}>
+             <Input 
+             style={styles.inputs}   
+             label="ref2" 
+             value={this.state.ptd_ref2}
+             onChangeText={(keyword) => this.setState({ptd_ref2:keyword})}/>
+              </View>
+              <View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10 }}>
+             <Input 
+             style={styles.inputs}   
+             label="ref3" 
+             value={this.state.ptd_ref3}
+             onChangeText={(keyword) => this.setState({ptd_ref3:keyword})}/>
+              </View>
+              {this.state.image != null &&    
+ 
+ <Text style={{
+     marginLeft:"20%",
+     textAlign: 'center', 
+     fontSize: 15,
+     marginTop: 0,
+     width: 200, 
+     backgroundColor: 'yellow', 
+     }}>กดค้างเพื่อลบรูปภาพ</Text>
+   }
    {this._renderImages()} 
    
   
@@ -383,7 +501,7 @@ class HomeScreen extends React.Component {
       style={styles.btnContainer}>
    <Ionicons name="md-image"  size={32} color="white"  />                     
         
-      <Text style={styles.btnText}>เลือกจากคลั่ง</Text>
+      <Text style={styles.btnText}>เลือกจากคลัง</Text>
     </View>
   </TouchableHighlight>
   </View> 
@@ -420,7 +538,7 @@ class HomeScreen extends React.Component {
         </View>      
           </View>
           </ScrollView>
-        );
+        : <ActivityIndicator style={{flex: 1, justifyContent: 'center'}} size="large" color="#83c336" /> );
       }
 }
 
@@ -434,14 +552,15 @@ class SettingsScreen extends React.Component {
     reportsess:[] 
   } 
   componentDidMount(){ 
+    
     let me = this
     let datauser = []; 
       AsyncStorage.getItem("user").then((value) => {   
       if(value == null){     
         this.props.navigation.navigate('login')
       }else{
-        datauser = JSON.parse(value);
-        fetch("http://green2.tndevs.com/api/api_get_tree.php?uiid="+datauser.user_id)
+        datauser = JSON.parse(value); 
+        fetch("http://www.greenarea.deqp.go.th/api/api_get_tree.php?uiid="+datauser.user_id)
       .then((response) =>  response.json())
       .then((responseJson) => {     
               me.setState({
@@ -462,7 +581,9 @@ class SettingsScreen extends React.Component {
     const { state, navigate } = this.props.navigation;
     console.disableYellowBox = true;
     return (
+      <ScrollView>
       <View >
+        <NavigationEvents onDidFocus={() => this.componentDidMount()} />
          {           
             this.state.reportsess.map((o, x) => (             
               <ListItem  
@@ -487,6 +608,7 @@ class SettingsScreen extends React.Component {
             ))
           }
       </View>
+      </ScrollView>
     );
   }
 }
@@ -517,6 +639,7 @@ class SuessScreen extends React.Component {
   render() {
     console.disableYellowBox = true; 
     return (
+      <ScrollView>
       <View >
          {           
            
@@ -538,6 +661,7 @@ class SuessScreen extends React.Component {
             ))
           } 
       </View>
+      </ScrollView>
     );
   }
 }
@@ -548,12 +672,12 @@ const TabNavigator = createMaterialTopTabNavigator({
   
   screen: HomeScreen ,  
   Suess: SuessScreen, 
-  Settings: SettingsScreen,
+  //Settings: SettingsScreen,
 }); 
 export default   createAppContainer(TabNavigator); 
 const styles = StyleSheet.create({
   contentContainer: { 
-    //paddingVertical: 50
+    paddingBottom: '80%',
   },
   inputs:{
     marginLeft:"3%",

@@ -139,7 +139,7 @@ export default class App extends React.Component {
         ({ coords: {latitude, longitude } }) =>  this.setState({latitude, longitude})
       )
        
-        fetch("http://green2.tndevs.com/api/api_get_greentype.php?fbclid=IwAR2EqZup4goE4aV2fmVWpDcB-Jsld3K5TROW_8XwjSUysYEDI2vbvzOeWM0")
+        fetch("http://www.greenarea.deqp.go.th/api/api_get_greentype.php?fbclid=IwAR2EqZup4goE4aV2fmVWpDcB-Jsld3K5TROW_8XwjSUysYEDI2vbvzOeWM0")
       .then((response) => response.json())
       .then((responseJson) => {   
               me.setState({
@@ -147,7 +147,7 @@ export default class App extends React.Component {
               })
       })
         
-      fetch("http://green2.tndevs.com/api/api_get_province.php?fbclid=IwAR3K5dAOQE7AuXrpGsMjyqBQZNlw7u8ekePbj6oxKz5YjuowizCzPAXrUrc")
+      fetch("http://www.greenarea.deqp.go.th/api/api_get_province.php?fbclid=IwAR3K5dAOQE7AuXrpGsMjyqBQZNlw7u8ekePbj6oxKz5YjuowizCzPAXrUrc")
       .then((response) => response.json())
       .then((responseJson) => {    
               me.setState({
@@ -155,7 +155,7 @@ export default class App extends React.Component {
               })
       })
       
-      fetch("http://green2.tndevs.com/api/api_get_amphur.php?province_id=10&fbclid=IwAR2Tg1l3NMnGwTM1SaXnpc1oi0b0u74ttZdDvry_xttNPCkl8z58Gs_U1go")
+      fetch("http://www.greenarea.deqp.go.th/api/api_get_amphur.php?province_id=10&fbclid=IwAR2Tg1l3NMnGwTM1SaXnpc1oi0b0u74ttZdDvry_xttNPCkl8z58Gs_U1go")
       .then((response) => response.json())
       .then((responseJson) => {    
               me.setState({
@@ -163,7 +163,7 @@ export default class App extends React.Component {
               })
       })
 
-      fetch("http://green2.tndevs.com/api/api_get_district.php?amphur_id=151&fbclid=IwAR0dqLiStj9Lb1Eq_IQjSw7mZe8cXKHmWRsz_vm9HMY3NsV3Gyzb8XNNqCE")
+      fetch("http://www.greenarea.deqp.go.th/api/api_get_district.php?amphur_id=151&fbclid=IwAR0dqLiStj9Lb1Eq_IQjSw7mZe8cXKHmWRsz_vm9HMY3NsV3Gyzb8XNNqCE")
       .then((response) => response.json())
       .then((responseJson) => {    
               me.setState({

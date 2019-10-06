@@ -1,8 +1,9 @@
 import React from 'react';
 import { Text, View, AsyncStorage } from 'react-native';
-import { createMaterialTopTabNavigator, createAppContainer } from 'react-navigation'; 
+import { createMaterialTopTabNavigator, createAppContainer, NavigationEvents } from 'react-navigation'; 
 import { ListItem, Badge  } from 'react-native-elements' 
 import NavigationService from './../../NavigationService';
+import { ScrollView } from 'react-native-gesture-handler';
 
 class HomeScreen extends React.Component {
    
@@ -52,7 +53,8 @@ class HomeScreen extends React.Component {
     })  
    }
   render() {
-    return ( 
+    return (
+      <ScrollView>
       <View  >
         {
         this.state.menu.map((l, i) => (
@@ -68,7 +70,8 @@ class HomeScreen extends React.Component {
           />
         ))
       } 
-      </View>  
+      </View> 
+      </ScrollView>  
     );
   }
 }
@@ -89,22 +92,26 @@ class SettingsScreen extends React.Component {
       if(value == null){     
         this.props.navigation.navigate('login')
       }else{
-        datauser = JSON.parse(value);
+        datauser = JSON.parse(value); 
         fetch("http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/api/api_get_report.php?uiid="+datauser.user_id)
-      .then((response) =>  response.json())
-      .then((responseJson) => {       
-              me.setState({
-                reportsess:responseJson 
-              })
-      })
+   .then((response) =>  response.json())
+   .then((responseJson) => {     
+      
+           me.setState({
+             reportsess:responseJson 
+           })
+   })
       } 
    }).done();   
+   
 }
 
   render() {
     console.disableYellowBox = true;
     return (
+      <ScrollView>
       <View >
+      <NavigationEvents onDidFocus={() => this.componentDidMount()} />
          {           
             this.state.reportsess.map((o, x) => (             
               <ListItem  
@@ -126,6 +133,7 @@ class SettingsScreen extends React.Component {
             ))
           }
       </View>
+      </ScrollView>
     );
   }
 }
@@ -171,6 +179,7 @@ class SuessScreen extends React.Component {
   render() {
     console.disableYellowBox = true; 
     return (
+      <ScrollView>
       <View >
          {           
            
@@ -193,6 +202,7 @@ class SuessScreen extends React.Component {
             ))
           }
       </View>
+      </ScrollView>
     );
   }
 }

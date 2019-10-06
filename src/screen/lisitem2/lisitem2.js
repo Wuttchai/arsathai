@@ -1,5 +1,5 @@
 import React from 'react';
-import { View,Button, Picker, Image, StyleSheet  , ScrollView, TouchableOpacity, Alert, TouchableHighlight, AsyncStorage } from "react-native";   
+import { View, KeyboardAvoidingView, Picker, ActivityIndicator, Image, StyleSheet  , ScrollView, TouchableOpacity, Alert, TouchableHighlight, AsyncStorage } from "react-native";   
  
 import { ListItem, Badge,Input,Text  } from 'react-native-elements'
 import { Camera } from 'expo-camera';
@@ -13,7 +13,7 @@ import MapView, {
   ProviderPropType,
 } from 'react-native-maps'; 
 
-import { createMaterialTopTabNavigator, createAppContainer} from 'react-navigation';
+import { createMaterialTopTabNavigator, createAppContainer, NavigationEvents} from 'react-navigation';
 import Formreport from '../lisitem2/report'; 
 const logoimg = require('../../../assets/icons/pang.jpg');
 class HomeScreen extends React.Component {
@@ -41,7 +41,9 @@ class HomeScreen extends React.Component {
         listtree:[],
         province:[],
         amphur:[],
+        polygonsx:[],
         district:[],
+        projectaddress:[],
         project_moo:null,
         polygons: [],
         number_of_area:0,
@@ -52,7 +54,7 @@ class HomeScreen extends React.Component {
         district_id:null,
         greentype_id:null,
         project_address:null,
-        project_percent:0,
+        project_percent:null,
         user:[],
         region:[]
     }
@@ -79,39 +81,15 @@ class HomeScreen extends React.Component {
   }
   calculateDistance(polygons) { 
     let datalat = [];
-    let datalon = [];
+    let num = 0
      polygons.coordinates.map(polygon => (
-      datalat = datalat.concat(polygon.latitude),
-      datalon = datalon.concat(polygon.latitude)
-      
-    )) 
-    console.log(datalat,datalon)
-
-    const lat1 = datalat[0];
-    const lon1 = datalon[0];
-  
-    const lat2 = datalat[1];
-    const lon2 = datalon[1];
-   
-    const lat3 = datalat[2];
-    const lon3 = datalon[2];
-
-    const pomath1 = lat1 * (Math.PI / 180);
-    const pomath2 = lat2 * (Math.PI / 180);
-    const pomath3 = lat3 * (Math.PI / 180);
-
-
-    const po1 = (lat2 - lat1) * (Math.PI / 180);
-    const po2 = (lon2 - lon1) * (Math.PI / 180); 
-  
-    const a = (Math.sin(po1 / 2) * Math.sin(po1 / 2)) + ((Math.cos(pomath1) * Math.cos(pomath2)) * (Math.sin(po2 / 2) * Math.sin(po2 / 2)));
-    
-
-              
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const R = 6371e3;
-    const distance = R * c;
-    return distance; // in meters
+      datalat[num] = [polygon.latitude,polygon.longitude],
+      num++
+    ))  
+    this.setState({
+      polygonsx:datalat
+    })
+     
   }
   onPress(e) {
     const { editing, creatingHole } = this.state;
@@ -152,12 +130,11 @@ class HomeScreen extends React.Component {
     const {status} = await Permissions.getAsync(Permissions.LOCATION) 
     const { statusca } = await Permissions.askAsync(Permissions.CAMERA);
     var date = new Date(); 
-    date.setDate(date.getDate() + 3)
+    //date.setDate(date.getDate() + 3)
     this.setState({ 
       hasCameraPermission: statusca === 'granted',
-      date2:date
-    });
-     
+      date2:date, 
+     }); 
       if(status !== 'granted'){
           const {response} = await Permissions.askAsync(Permissions.LOCATION)
       }
@@ -173,42 +150,67 @@ class HomeScreen extends React.Component {
             user:JSON.parse(value)
           })          
         } 
-     }).done();  
-        fetch("http://green2.tndevs.com/api/api_get_greentype.php?fbclid=IwAR2EqZup4goE4aV2fmVWpDcB-Jsld3K5TROW_8XwjSUysYEDI2vbvzOeWM0")
-      .then((response) => response.json())
-      .then((responseJson) => {   
-              me.setState({
-                listtree:responseJson
-              })
-      })
-        
-      fetch("http://green2.tndevs.com/api/api_get_province.php?fbclid=IwAR3K5dAOQE7AuXrpGsMjyqBQZNlw7u8ekePbj6oxKz5YjuowizCzPAXrUrc")
-      .then((response) => response.json())
-      .then((responseJson) => {    
-              me.setState({
-                province:responseJson
-              })
-      })
-      
-      fetch("http://green2.tndevs.com/api/api_get_amphur.php?province_id=10&fbclid=IwAR2Tg1l3NMnGwTM1SaXnpc1oi0b0u74ttZdDvry_xttNPCkl8z58Gs_U1go")
-      .then((response) => response.json())
-      .then((responseJson) => {    
-              me.setState({
-                amphur:responseJson
-              })
-      })
-
-      fetch("http://green2.tndevs.com/api/api_get_district.php?amphur_id=151&fbclid=IwAR0dqLiStj9Lb1Eq_IQjSw7mZe8cXKHmWRsz_vm9HMY3NsV3Gyzb8XNNqCE")
-      .then((response) => response.json())
-      .then((responseJson) => {    
-              me.setState({
-                district:responseJson
-              })
-      })
-
-      
-     
+     }).done();   
+     fetch("http://www.greenarea.deqp.go.th/api/api_get_province.php?fbclid=IwAR3K5dAOQE7AuXrpGsMjyqBQZNlw7u8ekePbj6oxKz5YjuowizCzPAXrUrc")
+     .then((response) => response.json())
+     .then((responseJson) => {    
+             me.setState({
+               province:responseJson
+             })
+     })
+     fetch("http://www.greenarea.deqp.go.th/api/api_get_greentype.php?fbclid=IwAR2EqZup4goE4aV2fmVWpDcB-Jsld3K5TROW_8XwjSUysYEDI2vbvzOeWM0")
+     .then((response) => response.json())
+     .then((responseJson) => {   
+             me.setState({
+               listtree:responseJson
+             })
+     })
   }
+  getdateall(){
+    let me = this
+    fetch("http://www.greenarea.deqp.go.th/api/api_get_greentype.php?fbclid=IwAR2EqZup4goE4aV2fmVWpDcB-Jsld3K5TROW_8XwjSUysYEDI2vbvzOeWM0")
+    .then((response) => response.json())
+    .then((responseJson) => {   
+            me.setState({
+              listtree:responseJson
+            })
+    }) 
+  }
+
+  province_select(data){
+    let me = this
+    this.setState({
+      province_id:data
+    })
+    fetch("http://www.greenarea.deqp.go.th/api/api_get_amphur.php?province_id="+data+"&fbclid=IwAR2Tg1l3NMnGwTM1SaXnpc1oi0b0u74ttZdDvry_xttNPCkl8z58Gs_U1go")
+    .then((response) => response.json())
+    .then((responseJson) => {    
+            me.setState({
+              amphur:responseJson
+            })        
+    })
+    fetch("http://www.greenarea.deqp.go.th/api/api_get_local.php?province_id="+data)
+    .then((response) => response.json())
+    .then((responseJson) => {     
+            me.setState({
+              projectaddress:responseJson
+            })
+    })
+  }
+  district_select(data){
+    let me = this
+    this.setState({
+      amphur_id:data
+    })
+    fetch("http://www.greenarea.deqp.go.th/api/api_get_district.php?amphur_id="+data+"&fbclid=IwAR0dqLiStj9Lb1Eq_IQjSw7mZe8cXKHmWRsz_vm9HMY3NsV3Gyzb8XNNqCE")
+    .then((response) => response.json())
+    .then((responseJson) => {    
+            me.setState({
+              district:responseJson
+            })
+    })
+  }
+
   _renderImages() {
     let images = [];
     this.state.image != null ?
@@ -285,102 +287,126 @@ formatDate(date) {
   return [year, month, day].join('-');
 }
   submit(){
-    
-
-    let perfix_img = Date.now()
-    let random = Math.floor(Math.random()*100)
-    let img_file_name = perfix_img+"_"+random+".jpg"
-    const data = new FormData();
+    if(this.state.polygonsx.length == 0){ 
+      Alert.alert(
+        'ล้มเหลว !',
+        'กรุณาเลือกพื้นที่',
+        [ 
+          {
+            text: 'ยืนยัน'
+          },
+        ], 
+      );
+    }else if(this.state.report_detail == ""){ 
+      Alert.alert(
+        'ล้มเหลว !',
+        'กรุณาใส่ชื่อโครงการ',
+        [ 
+          {
+            text: 'ยืนยัน'
+          },
+        ], 
+      );
+    }else if(this.state.project_address == null){ 
+      Alert.alert(
+        'ล้มเหลว !',
+        'กรุณาใส่เขตการปกครอง',
+        [ 
+          {
+            text: 'ยืนยัน'
+          },
+        ], 
+      );
+    }else if(this.state.greentype_id == " "){ 
+    Alert.alert(
+      'ล้มเหลว !',
+      'กรุณาเลือกประเภทต้นไม้',
+      [ 
+        {
+          text: 'ยืนยัน'
+        },
+      ], 
+    );
+  }else if(this.state.report_keyword == ""){ 
+    Alert.alert(
+      'ล้มเหลว !',
+      'กรุณาใส่รายละเอียดโครงการ',
+      [ 
+        {
+          text: 'ยืนยัน'
+        },
+      ], 
+    );
+  } 
+    else if(this.state.province_id == " "){ 
+      Alert.alert(
+        'ล้มเหลว !',
+        'กรุณาเลือกจังหวัด',
+        [ 
+          {
+            text: 'ยืนยัน'
+          },
+        ], 
+      );
+    }else if(this.state.amphur_id == " "){ 
+      Alert.alert(
+        'ล้มเหลว !',
+        'กรุณาเลือกอำเภอ',
+        [ 
+          {
+            text: 'ยืนยัน'
+          },
+        ], 
+      );
+    }else if(this.state.district_id == " "){ 
+      Alert.alert(
+        'ล้มเหลว !',
+        'กรุณาเลือกตำบล',
+        [ 
+          {
+            text: 'ยืนยัน'
+          },
+        ], 
+      );
+    }else if(this.state.project_moo == null){ 
+      Alert.alert(
+        'ล้มเหลว !',
+        'กรุณาใส่หมู่',
+        [ 
+          {
+            text: 'ยืนยัน'
+          },
+        ], 
+      );
+    }else if(this.state.project_percent == null){ 
+      Alert.alert(
+        'ล้มเหลว !',
+        'กรุณาใส่พื้นที่สิ่งกรีดขวาง',
+        [ 
+          {
+            text: 'ยืนยัน'
+          },
+        ], 
+      );
+    }else if(this.state.image == null){ 
+      this.submitform('null');
+    }else{
+      let perfix_img = Date.now()
+      let random = Math.floor(Math.random()*100)
+      let img_file_name = perfix_img+"_"+random+".jpg"
+      const data = new FormData();
     data.append('photo', {
     uri: this.state.image,
     type: 'image/jpeg',
     name: img_file_name
     });    
-    fetch('http://green2.tndevs.com/api_upload2.php', {
+    fetch('http://www.greenarea.deqp.go.th/api_upload2.php', {
       method: 'post',
       body: data
     })
     .then(res => {   
-      let report =  {}; 
-      report.uuid = this.state.user.user_id
-      report.project_name = this.state.report_detail
-      report.project_description = this.state.report_keyword
-      report.planting_date = this.formatDate(this.state.date2)
-      report.survey_date = this.formatDate(this.state.date)
-      report.action = 'insert'
-      report.project_img = img_file_name
-      report.project_address = this.state.project_address
-      report.project_moo = this.state.project_moo
-      report.province_id = this.state.province_id 
-      report.amphur_id = this.state.amphur_id 
-      report.district_id = this.state.district_id 
-      report.greentype_id = this.state.greentype_id
-      report.project_area = this.state.number_of_area 
-      report.project_percent = this.state.project_percent
-      report.project_polygon = JSON.stringify(this.state.polygons) 
-      let data =  JSON.stringify(report) 
-      fetch("http://green2.tndevs.com/api/api_set_report.php", {
-        method: "post", 
-        body:data,
-      }).then(res => res.json())
-        .then(res => { 
-          if(res.status === "success"){
-            Alert.alert(
-              "สำเร็จ!",
-              "รายงานผลเรียบร้อย!",
-              [{ text: "OK",  onPress: () => { 
-                this.props.navigation.navigate('Settings', {
-                  onGoBack: () => this.refresh(),
-                }) 
-                
-                }
-              }],
-              { cancelable: false }
-            );
-          }else{
-            let reportfail = [];
-            reportfail.push({ 
-              report_detail : this.state.report_keyword,
-              report_timestamp:this.formatDate(perfix_img),
-              namereport:this.state.report_detail,
-            });
-            AsyncStorage.getItem("Datafail2").then((value) => {   
-              if(value == null){  
-                datafail = JSON.stringify(reportfail)   
-                AsyncStorage.setItem("Datafail2", datafail);
-              }else{  
-                datafail = JSON.parse(value).concat(reportfail)
-                
-                AsyncStorage.setItem("Datafail2", JSON.stringify(datafail));
-              } 
-           }).done(); 
-          }
-        }).catch(err => { 
-            let reportfail = [];
-            reportfail.push({ 
-              report_detail : this.state.report_keyword,
-              report_timestamp:this.formatDate(perfix_img),
-              namereport:this.state.report_detail,
-            });
+        this.submitform(img_file_name);
 
-            AsyncStorage.getItem("Datafail2").then((value) => {   
-              if(value == null){  
-                datafail = JSON.stringify(reportfail)   
-                AsyncStorage.setItem("Datafail2", datafail);
-              }else{  
-                datafail = JSON.parse(value).concat(reportfail)
-                
-                AsyncStorage.setItem("Datafail2", JSON.stringify(datafail));
-              } 
-           }).done(); 
-
-
-          Alert.alert(
-            "ล้มเหลว!",
-            "ไม่สามารถรายงานผลได้!",
-            [{ text: "ตกลง" }]
-          );
-        });   
      }).catch(err => { 
       let reportfail = [];
       reportfail.push({ 
@@ -404,9 +430,120 @@ formatDate(date) {
       [{ text: "ตกลง" }]
     );
   });
- 
+}
   }
+  submitform(img_file_name){
+    let report =  {}; 
+    report.uuid = this.state.user.user_id
+    report.project_name = this.state.report_detail
+    report.project_description = this.state.report_keyword
+    report.planting_date = this.formatDate(this.state.date2)
+    report.survey_date = this.formatDate(this.state.date)
+    report.action = 'insert'
+    report.project_img = img_file_name
+    report.project_address = this.state.project_address
+    report.project_moo = this.state.project_moo
+    report.province_id = this.state.province_id 
+    report.amphur_id = this.state.amphur_id 
+    report.district_id = this.state.district_id 
+    report.greentype_id = this.state.greentype_id
+    report.project_area = this.state.number_of_area 
+    report.project_percent = this.state.project_percent
+    report.project_polygon = JSON.stringify(this.state.polygonsx)
+    console.log(report)
+    let data =  JSON.stringify(report) 
+    fetch("http://www.greenarea.deqp.go.th/api/api_set_report.php", {
+      method: "post", 
+      body:data,
+    }).then(res => res.json())
+      .then(res => { 
+        if(res.status === "success"){
+          Alert.alert(
+            "สำเร็จ!",
+            "รายงานผลเรียบร้อย!",
+            [{ text: "OK",  onPress: () => { 
+              var date = new Date(); 
+              date.setDate(date.getDate() + 3)
+              this.setState({
+                num:0, 
+                image: null,
+                date:new Date(),
+                date2:date,   
+                check1:false,
+                check2:false, 
+                report_detail:"",
+                report_keyword:"",  
+                amphur:[],
+                polygonsx:[],
+                district:[],
+                projectaddress:[],
+                project_moo:null,
+                polygons: [],
+                number_of_area:0,
+                editing: null,
+                creatingHole: false,
+                province_id:null,
+                amphur_id:null,
+                district_id:null,
+                greentype_id:null,
+                project_address:null,
+                project_percent:null, 
+                region:[]
+                
+              }); 
+              this.props.navigation.navigate('Settings', {
+                onGoBack: () => this.refresh(),
+              }) 
+              
+              }
+            }],
+            { cancelable: false }
+          );
+        }else{
+          let reportfail = [];
+          reportfail.push({ 
+            report_detail : this.state.report_keyword,
+            report_timestamp:this.formatDate(perfix_img),
+            namereport:this.state.report_detail,
+          });
+          AsyncStorage.getItem("Datafail2").then((value) => {   
+            if(value == null){  
+              datafail = JSON.stringify(reportfail)   
+              AsyncStorage.setItem("Datafail2", datafail);
+            }else{  
+              datafail = JSON.parse(value).concat(reportfail)
+              
+              AsyncStorage.setItem("Datafail2", JSON.stringify(datafail));
+            } 
+         }).done(); 
+        }
+      }).catch(err => { 
+          let reportfail = [];
+          reportfail.push({ 
+            report_detail : this.state.report_keyword,
+            report_timestamp:this.formatDate(perfix_img),
+            namereport:this.state.report_detail,
+          });
 
+          AsyncStorage.getItem("Datafail2").then((value) => {   
+            if(value == null){  
+              datafail = JSON.stringify(reportfail)   
+              AsyncStorage.setItem("Datafail2", datafail);
+            }else{  
+              datafail = JSON.parse(value).concat(reportfail)
+              
+              AsyncStorage.setItem("Datafail2", JSON.stringify(datafail));
+            } 
+         }).done(); 
+
+
+        Alert.alert(
+          "ล้มเหลว!",
+          "ไม่สามารถรายงานผลได้!",
+          [{ text: "ตกลง" }]
+        );
+      });
+  }
   render() {    
     const mapOptions = {
       scrollEnabled: true,
@@ -429,12 +566,22 @@ const amphur = this.state.amphur.map( (l, i) => {
 const district = this.state.district.map( (l, i) => {
 return <Picker.Item label={l.district_name} value={l.district_id} />
 }); 
-    return (
+const projectaddress = this.state.projectaddress.map( (l, i) => { 
+  return <Picker.Item label={l.local_name} value={l.local_id} />
+  });  
+  
+    return ( this.state.latitude != null ?
       
-        <ScrollView ref={(scroll) => {this.scroll = scroll;}} contentContainerStyle={styles.contentContainer}>
-      <View >   
+        <ScrollView ref={(scroll) => {this.scroll = scroll;}} keyboardShouldPersistTaps={false} contentContainerStyle={styles.contentContainer}>
+      <View > 
+      <KeyboardAvoidingView behavior="padding" style={styles.form} enabled>
+      <NavigationEvents onDidFocus={() =>
+      this.state.listtree.length == 0 || this.state.province.length == 0 || this.state.projectaddress.length == 0 ?
+         this.getdateall()
+         :null
+         } /> 
                   <Text h3 style={styles.paragraph}>{this.state.namereport}</Text> 
-                  <MapView 
+                  <MapView  
         provider={this.props.provider}
         style={{ flex: 1 ,height:300,marginLeft:"5%",marginRight:"5%",marginBottom:"5%" }}
         mapType={MAP_TYPES.HYBRID}
@@ -447,6 +594,11 @@ return <Picker.Item label={l.district_name} value={l.district_id} />
         onPress={e => this.onPress(e)}
         {...mapOptions}
       >
+         
+          <MapView.Marker 
+            coordinate={{ latitude: this.state.latitude, longitude: this.state.longitude }}
+          />
+          
         {this.state.polygons.map(polygon => (
           <Polygon
             key={polygon.id}
@@ -482,7 +634,7 @@ return <Picker.Item label={l.district_name} value={l.district_id} />
             onPress={() => this.finish()}
             style={[styles.bubble, styles.button]}
           >
-            <Text>เสร็จ</Text>
+            <Text>เสร็จ เเล้วกรุณากด</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -490,14 +642,12 @@ return <Picker.Item label={l.district_name} value={l.district_id} />
       <Input 
          style={styles.inputs}   
          label="ชื่อโครงการ" 
+         value={this.state.report_detail}
          onChangeText={(detail) => this.setState({report_detail:detail})}/>
-      <Input 
-         style={styles.inputs}   
-         label="เขตการปกครอง" 
-         onChangeText={(keyword) => this.setState({project_address:keyword})}/>
+      
 
 <View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, marginLeft:"3%"}}>
-<Text style={{color: '#86939e',fontSize: 16,fontWeight: 'bold'}}   >เลือกประเภทต้นไม้</Text>
+<Text style={{color: '#86939e',fontSize: 16,fontWeight: 'bold'}}   >เลือกประเภทของพื้นที่สีเขียว</Text>
 
        <Picker
 selectedValue={this.state.greentype_id}
@@ -515,7 +665,7 @@ onValueChange={(itemValue, itemIndex) =>
 </View>
 <View  style={{marginBottom: 10}}  >
 <Input 
-         
+         value={this.state.report_keyword}
          label="รายละเอียดโครงการ" 
          onChangeText={(keyword) => this.setState({report_keyword:keyword})}/> 
 </View>
@@ -581,7 +731,7 @@ onValueChange={(itemValue, itemIndex) =>
 selectedValue={this.state.province_id}
 style={{height: 50, width: "100%"}}
 onValueChange={(itemValue, itemIndex) =>
-  this.setState({province_id: itemValue})
+  this.province_select(itemValue)
 }>
   <Picker.Item label="--จังหวัด--" value=" " />
   {province}
@@ -593,7 +743,7 @@ onValueChange={(itemValue, itemIndex) =>
 selectedValue={this.state.amphur_id}
 style={{height: 50, width: "100%"}}
 onValueChange={(itemValue, itemIndex) =>
-  this.setState({amphur_id: itemValue})
+  this.district_select(itemValue)
 }>
   <Picker.Item label="--อำเภอ--" value=" " />
   {amphur}
@@ -608,33 +758,52 @@ onValueChange={(itemValue, itemIndex) =>
   this.setState({district_id: itemValue})
 }>
   <Picker.Item label="--ตำบล--" value=" " />
-  {district}
-
-
-
-</Picker>
+  {district} 
+</Picker> 
 </View>  
+
+<View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, marginLeft:"3%"}}>
+<Text style={{color: '#86939e',fontSize: 16,fontWeight: 'bold'}}   >เขตการปกครองท้องถิ่น</Text>
+<Picker
+selectedValue={this.state.project_address}
+style={{height: 50, width: "100%"}}
+onValueChange={(itemValue, itemIndex) =>
+  this.setState({project_address: itemValue})
+}>
+  <Picker.Item label="--เขตการปกครองท้องถิ่น--" value=" " />
+  {projectaddress}
+</Picker>
+</View>
+
 <View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10,  }}>
 <Input 
          style={styles.inputs}   
          label="หมู่" 
+         value={this.state.project_moo}
          onChangeText={(keyword) => this.setState({project_moo:keyword})}/>
          </View>
          <View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, }}>
         <Input 
          style={styles.inputs}   
          label="พื้นที่สิ่งกรีดขวาง %" 
+         value={this.state.project_percent}
          onChangeText={(keyword) => this.setState({project_percent:keyword})}/>
          </View>
          <View style={{ flexDirection: 'column',marginTop: 10,marginBottom: 10, }}>
-         <Input 
-         style={styles.inputs}   
-         label="พื้นที่ปลูก (ตรม.) " 
-         value={this.state.number_of_area}
-         onChangeText={(keyword) => this.setState({number_of_area:keyword})}/>
+        
          
         </View>
-    
+        {this.state.image != null &&    
+ 
+ <Text style={{
+     marginLeft:"20%",
+     textAlign: 'center', 
+     fontSize: 15,
+     marginTop: 0,
+     width: 200, 
+     backgroundColor: 'yellow', 
+     }}>กดค้างเพื่อลบรูปภาพ</Text>
+   }
 {this._renderImages()} 
 
 
@@ -647,7 +816,7 @@ underlayColor='#042417'>
   style={styles.btnContainer}>
 <Ionicons name="md-image"  size={32} color="white"  />                     
     
-  <Text style={styles.btnText}>เลือกจากคลั่ง</Text>
+  <Text style={styles.btnText}>เลือกจากคลัง</Text>
 </View>
 </TouchableHighlight>
 </View> 
@@ -681,10 +850,12 @@ underlayColor='#042417'>
 </TouchableHighlight>   
 </View>
 
-    </View>      
+    </View>     
+    </KeyboardAvoidingView>  
       </View>
+      
       </ScrollView>
-    );
+    : <ActivityIndicator style={{flex: 1, justifyContent: 'center'}} size="large" color="#83c336" /> );
   }
 }
 class SuessScreen extends React.Component {
@@ -709,8 +880,10 @@ class SuessScreen extends React.Component {
 }
 
   render() {
+    
     console.disableYellowBox = true; 
     return (
+      <ScrollView>
       <View >
          {           
            
@@ -733,13 +906,14 @@ class SuessScreen extends React.Component {
             ))
           } 
       </View>
+      </ScrollView>
     );
   }
 }
 class SettingsScreen extends React.Component {
   
-  static navigationOptions = ({ navigation }) => {  
-    const { params } = navigation.state; 
+  static navigationOptions = ({ navigation }) => { 
+    const { params } = navigation.state;
     return {
       title: 'ประวัติรายงาน', 
       params
@@ -758,9 +932,9 @@ class SettingsScreen extends React.Component {
         this.props.navigation.navigate('login')
       }else{
         datauser = JSON.parse(value);
-        fetch("http://green2.tndevs.com/api/api_get_report.php?uiid="+datauser.user_id)
+        fetch("http://www.greenarea.deqp.go.th/api/api_get_report.php?uiid="+datauser.user_id)
       .then((response) =>  response.json())
-      .then((responseJson) => {      
+      .then((responseJson) => {     
               me.setState({
                 reportsess:responseJson 
               })
@@ -784,9 +958,11 @@ class SettingsScreen extends React.Component {
     
     console.disableYellowBox = true;
     return (
+      <ScrollView>
       <View >
+        <NavigationEvents onDidFocus={() => this.componentDidMount()} />
          {           
-            this.state.reportsess.map((o, x) => (             
+            this.state.reportsess.map((o, x) =>(      
               <ListItem  
               containerStyle={{  
                   borderBottomWidth: 1,
@@ -810,6 +986,7 @@ class SettingsScreen extends React.Component {
           }
           
       </View>
+      </ScrollView>
     );
   }
 }
@@ -822,8 +999,10 @@ const TabNavigator = createMaterialTopTabNavigator({
 }); 
 export default   createAppContainer(TabNavigator);  
 const styles = StyleSheet.create({
-  contentContainer: { 
-    //paddingVertical: 50
+  contentContainer: {  
+    paddingTop: 10,
+    paddingBottom: '80%',
+    
   },
   container: {
     flex: 1, 
@@ -891,6 +1070,10 @@ latlng: {
 button: { 
   alignItems: 'center', 
   justifyContent: 'center'
+},
+form: {
+  flex: 1,
+  justifyContent: 'space-between',
 },
 
 });

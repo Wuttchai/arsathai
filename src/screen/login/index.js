@@ -49,15 +49,23 @@ export default class LoginView extends Component {
     var _password = this.state.password;
     if (_username !== "" && _password !== "") {
     var hash = SHA1(_password); 
-    fetch("https://www.deqp.go.th/data-center/tsm-auth/?UserId="+_username+"&UserPassword="+hash)
+    fetch("https://www.deqp.go.th/data-center/user-auth/?UserId="+_username+"&UserPassword="+hash)
     .then((response) => response.json())
     .then((responseJson) => {
+      console.log(responseJson.length);
       let datatuser =  {};
       datatuser.user_id = _username
       datatuser.datauser =  responseJson
       
-      if(responseJson.userName !== undefined){  
+      if(responseJson.username !== undefined){  
         this._signInAsync(JSON.stringify(datatuser));                      
+      }else{
+        Alert.alert(
+          "ผิดพลาด!",
+          "ชื่อผู้ใช้ หรือ รหัสผ่าน ไม่ถูกต้อง!",
+          [{ text: "OK"}],
+          { cancelable: false }
+        );
       }
     })
     .catch((error) => {
@@ -80,7 +88,7 @@ export default class LoginView extends Component {
   };
   _signorther = async () => {
     let datauser = {
-      "user_id":"8888",
+      "user_id":"guest",
       "datauser":{
         "userName":"ผู้ใช้ทั่วไป",
         "userSurname":"ระบบ",
@@ -114,6 +122,7 @@ export default class LoginView extends Component {
            style={styles.inputs} 
            placeholder='รหัสผ่าน' 
            placeholderTextColor={'#83c336'} 
+           secureTextEntry={true}
            onChangeText={(password) => this.setState({password:password})}/>
            
         </View>

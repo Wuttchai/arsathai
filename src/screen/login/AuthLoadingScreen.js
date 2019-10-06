@@ -12,8 +12,8 @@ export default class App extends React.Component {
       render() {
         return (
           <View style={styles.container}>
-            <ActivityIndicator />
-            <StatusBar barStyle="default" />
+            <ActivityIndicator size="large" color="#83c336" />
+             
           </View>
         );
       }
@@ -22,9 +22,7 @@ export default class App extends React.Component {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      paddingTop: "15%",
-      backgroundColor: '#effde3',
-      padding: 8,
+      justifyContent: 'center'
     },
   });
 

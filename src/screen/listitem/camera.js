@@ -85,7 +85,7 @@ export default class CameraExample extends React.Component {
     };
     prepareCallback() {
   
-      this.props.callback(this.state.photos,this.props.report_keyword,this.props.report_detail)
+      this.props.callback(this.state.photos,this.props.report_keyword,this.props.report_detail,this.props.report_check1,this.props.report_check2)
        
     }
     renderHeader = () => { 
@@ -95,7 +95,7 @@ export default class CameraExample extends React.Component {
         <View style={styles.header}>
           <Button
             title="ยกเลิก"
-            onPress={() => this.props.callback(undefined,this.props.report_keyword,this.props.report_detail)}
+            onPress={() => this.props.callback(undefined,this.props.report_keyword,this.props.report_detail,this.props.report_check1,this.props.report_check2)}
           />
           <Text>{headerText}</Text>
           <Button

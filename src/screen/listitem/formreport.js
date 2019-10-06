@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Button, Image, StyleSheet, CheckBox, ScrollView, TouchableOpacity, Alert, TouchableHighlight, AsyncStorage } from "react-native";   
+import { View, ActivityIndicator, Image, StyleSheet, CheckBox, ScrollView, TouchableOpacity, Alert, TouchableHighlight, AsyncStorage } from "react-native";   
 import { Input, Text  } from 'react-native-elements'; 
 import { Camera } from 'expo-camera';
 import {Permissions} from 'expo'
@@ -32,7 +32,9 @@ export default class App extends React.Component {
         type: Camera.Constants.Type.back,
         imageBrowserOpen: false,
         imageCameraOpen:false,
-        photos: [] 
+        photos: [] ,
+        markers:[],
+        display:'none'
     }
   }   
   static navigationOptions = { 
@@ -43,19 +45,27 @@ export default class App extends React.Component {
     headerTintColor: 'white'
   }
   async componentDidMount(){ 
-    console.disableYellowBox = true; 
+   // console.disableYellowBox = true; 
     const {status} = await Permissions.getAsync(Permissions.LOCATION) 
     const { statusca } = await Permissions.askAsync(Permissions.CAMERA);
     const { testtt } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
     this.setState({ hasCameraPermission: statusca === 'granted' });
-     
+      
+          
       if(status !== 'granted'){
           const {response} = await Permissions.askAsync(Permissions.LOCATION)
       }
-      await   navigator.geolocation.getCurrentPosition(
-        ({ coords: {latitude, longitude } }) =>  this.setState({latitude, longitude})
+      await   navigator.geolocation.getCurrentPosition( 
+        ({ coords: {latitude, longitude } }) =>  this.setState({latitude, longitude,
+          markers: [{ latitude: latitude, longitude: longitude }]
+        })
       )
-
+      if(this.state.latitude !== null){
+        
+        this.setState({ display:'block'});
+      }
+      
+      
   }
   renderImage(item, i) { 
     return(
@@ -123,7 +133,7 @@ export default class App extends React.Component {
       })
     }).catch((e) => console.log(e))
   }
-  imageCameraCallback = (callback,report_keyword,report_detail) => {  
+  imageCameraCallback = (callback,report_keyword,report_detail,check1,check2) => {  
     let data = [];
     if(callback !=  undefined)   {
         data = this.state.photos.concat(callback)
@@ -134,7 +144,7 @@ export default class App extends React.Component {
     imageCameraOpen: false, 
     photos: data,
     report_detail : report_detail,
-    report_keyword :report_keyword ,
+    report_keyword :report_keyword , 
 })
   }
   async snap() {       
@@ -236,7 +246,7 @@ export default class App extends React.Component {
         fetch('http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/api_upload.php', {
           method: 'post',
           body: data
-        }).then(res => {
+        }).then(res => { 
           me.setState({image:me.state.image.concat(img_file_name)}) 
           if(numimg === i+1){
           let report =  {};
@@ -264,10 +274,15 @@ export default class App extends React.Component {
                 Alert.alert(
                   "สำเร็จ!",
                   "รายงานผลเรียบร้อย!",
-                  [{ text: "ตกลง", onPress: () => {         
+                  [
+                    { 
+                    text: "ตกลง", onPress: () => {         
                     this.props.navigation.navigate('listitem')
-                    }}]
+                    }
+                   }
+                  ],{ cancelable: false }
                 );
+                
               }      
             })
             .catch(err => {  
@@ -321,34 +336,152 @@ export default class App extends React.Component {
     return await this.getdata()   
  }   
 
-  submit(){
-    this.warningdata()
+  submit(){ 
+    if(this.state.report_detail == ""){ 
+      Alert.alert(
+        'ล้มเหลว !',
+        'กรุณาใส่รายละเอียด',
+        [ 
+          {
+            text: 'ยืนยัน'
+          },
+        ], 
+      );
+    }else if(this.state.report_keyword == ""){ 
+      Alert.alert(
+        'ล้มเหลว !',
+        'กรุณาใส่ keyword',
+        [ 
+          {
+            text: 'ยืนยัน'
+          },
+        ], 
+      );
+    }else if(this.state.photos.length == 0){ 
+    this.submitform()
+    }else{
+      this.warningdata()
+    } 
      
   }
-
+    submitform(){
+      let me = this
+      let report =  {};
+      report.report_lat = me.state.latitude
+      report.report_lng = me.state.longitude
+      report.reportcat_id = me.props.navigation.state.params.reportcat_id
+      report.reportcat_name  = me.props.navigation.state.params.namereport
+      report.user_id  = me.props.navigation.state.params.user.user_id
+      report.report_detail = me.state.report_detail
+      report.report_keyword = me.state.report_keyword
+      report.action = "insert" 
+      report.report_img1 = 'null'
+      report.report_img2 = 'null'
+      report.report_img3 = 'null'
+      report.report_img4 = 'null'
+      report.report_img5 = 'null'
+      report.base64Image = "insert" 
+      let data =  JSON.stringify(report) 
+    fetch("http://www.nevt.deqp.go.th/DEQP_NEVT/nevt_v2/api/api_set_report.php", {
+        method: "post", 
+        body: data,
+      }).then(res => res.json())
+        .then(res => { 
+          if(res.status === "success"){ 
+            Alert.alert(
+              "สำเร็จ!",
+              "รายงานผลเรียบร้อย!",
+              [
+                { 
+                text: "ตกลง", onPress: () => {         
+                this.props.navigation.navigate('listitem')
+                }
+               }
+              ],{ cancelable: false }
+            );
+            
+          }      
+        })
+        .catch(err => {  
+          let date = new Date(); 
+          let month = ''; 
+          let day = ''; 
+            if(date.getMonth() <= 9 ){
+             month = '0'+date.getMonth()
+            }else{
+               month = date.getMonth() 
+            }
+            if(date.getDate() <= 9 ){
+              day = '0'+date.getDate() 
+            }else{
+              day = date.getDate() 
+            }
+            let timestamp = date.getFullYear()+"-"+month+"-"+day
+            let reportfail = [];
+            reportfail.push({
+              reportcat_thname: me.props.navigation.state.params.namereport,
+              report_detail : me.state.report_detail,
+              report_timestamp:timestamp,
+              report_icon:me.props.navigation.state.params.iconreport,
+            }); 
+            
+            let datafail = []  
+            
+            AsyncStorage.getItem("Datafail").then((value) => {   
+              if(value == null){  
+                datafail = JSON.stringify(reportfail)   
+                AsyncStorage.setItem("Datafail", datafail);
+              }else{  
+                datafail = JSON.parse(value).concat(reportfail)
+                
+                AsyncStorage.setItem("Datafail", JSON.stringify(datafail));
+              } 
+           }).done(); 
+             Alert.alert(
+            "ล้มเหลว!",
+            "ไม่สามารถรายงานผลได้!",
+            [{ text: "ตกลง" }]
+          );
+        });
+    }
+    addMarker(coordinates) {
+      this.setState({
+        markers: [{ latitude: coordinates.latitude, longitude: coordinates.longitude }],
+        latitude:coordinates.latitude,
+        longitude:coordinates.longitude,
+      });
+    }
     render() { 
+       
       if (this.state.imageBrowserOpen) { 
-        return(<ImageBrowser max={5-this.state.photos.length} report_keyword={this.state.report_keyword} report_detail={this.state.report_detail} num={this.state.photos.length} callback={this.imageBrowserCallback}/>);
+        return(<ImageBrowser max={5-this.state.photos.length} report_check1={this.state.check1} report_check2={this.state.check2} report_keyword={this.state.report_keyword} report_detail={this.state.report_detail} num={this.state.photos.length} callback={this.imageBrowserCallback}/>);
       }
       if (this.state.imageCameraOpen) {
-        return(<ImageCamera max={5-this.state.photos.length} report_keyword={this.state.report_keyword} report_detail={this.state.report_detail} num={this.state.photos.length} callback={this.imageCameraCallback}/>);
+        return(<ImageCamera max={5-this.state.photos.length}  report_check1={this.state.check1} report_check2={this.state.check2} report_keyword={this.state.report_keyword} report_detail={this.state.report_detail} num={this.state.photos.length} callback={this.imageCameraCallback}/>);
       }
-      return (
-        
-          <ScrollView ref={(scroll) => {this.scroll = scroll;}} contentContainerStyle={styles.contentContainer}>
+      return ( this.state.latitude !== null ?
+   
+          <ScrollView ref={(scroll) => {this.scroll = scroll;}}   contentContainerStyle={styles.contentContainer}>
         <View >   
                     <Text h3 style={styles.paragraph}>รายงาน : {this.state.namereport}</Text> 
-                    <MapView
-        showsUserLocation
-        style={{ flex: 1 ,height:300,marginLeft:"5%",marginRight:"5%",marginBottom:"5%" }}
-        mapType={MAP_TYPES.HYBRID}
-        initialRegion={{
-          latitude:this.state.latitude,  
-          longitude:this.state.longitude,
-          latitudeDelta: 0.0022,
-          longitudeDelta: 0.0121,
-        }}
-      />
+                    <MapView 
+      style={{ flex: 1 ,height:300,marginLeft:"5%",marginRight:"5%",marginBottom:"5%" }}
+      mapType={MAP_TYPES.HYBRID}
+      initialRegion={{
+        latitude:this.state.latitude,  
+        longitude:this.state.longitude,
+        latitudeDelta: 0.0022,
+        longitudeDelta: 0.0121,
+      }} 
+        onPress={event => this.addMarker(event.nativeEvent.coordinate)}
+      > 
+        {this.state.markers.map(marker =>
+          (<MapView.Marker
+            key={marker.index}
+            coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+          />)
+        )}
+      </MapView>
 
         <Input 
            style={styles.inputs}   
@@ -392,7 +525,17 @@ export default class App extends React.Component {
     <Text style={{marginTop: 5}}> Hotspot</Text>
   </View>
 </View>
+{this.state.photos.length > 0 &&    
  
+ <Text style={{
+     marginLeft:"20%",
+     textAlign: 'center', 
+     fontSize: 15,
+     marginTop: 0,
+     width: 200, 
+     backgroundColor: 'yellow', 
+     }}>กดค้างเพื่อลบรูปภาพ</Text>
+   }
 <View  style={{flex: 1, flexDirection: 'row', flexWrap: 'wrap',marginLeft:10}}> 
         
  {this.state.photos.map((item,i) => this.renderImage(item,i))}
@@ -407,7 +550,7 @@ export default class App extends React.Component {
     style={styles.btnContainer}>
  <Ionicons name="md-image"  size={32} color="white"  />                     
       
-    <Text style={styles.btnText}>เลือกจากคลั่ง</Text>
+    <Text style={styles.btnText}>เลือกจากคลัง</Text>
   </View>
 </TouchableHighlight>
 </View> 
@@ -442,13 +585,15 @@ export default class App extends React.Component {
       </View>      
         </View>
         </ScrollView>
-      );
+     : <ActivityIndicator style={{flex: 1,
+      justifyContent: 'center'}} size="large" color="#83c336" />);
+      
     }
   }
 
   const styles = StyleSheet.create({
     contentContainer: { 
-      //paddingVertical: 50
+      paddingBottom: '80%',
     },
     container: {
       flex: 1, 

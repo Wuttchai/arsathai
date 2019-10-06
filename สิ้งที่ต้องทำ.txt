@@ -1,11 +1,11 @@
 รายงาน การเพิ่ม ให้เพิ่มรูปได้5รูป
 รอรายงานคือ errror respone
 
-สร้างรายงาน = http://green2.tndevs.com/form_fill/
+สร้างรายงาน = http://www.greenarea.deqp.go.th/form_fill/
 
 
 
-สร้างข้อมูลต้นไม้ = http://green2.tndevs.com/follow_per_tree/tree/3/
+สร้างข้อมูลต้นไม้ = http://www.greenarea.deqp.go.th/follow_per_tree/tree/3/
 เข้ามาหน้าฟอร์มเเทนlistmenu
 แปลง รอ get
 เรียกฟอร์ม ส่งรายงาน
@@ -43,8 +43,27 @@ map ทีลากเส้น
 2.รูปภาพ 1รูป
 3.ไฟล์แนบไม่เอา
 4.กรอบสีเขียงไม่เอา
-
-
 สร้างต้นไม้
+
+
+7/27/2019 
+
+mapview มีบัค เดี๋ยวขึ้น ไม่ขึ้น  ต้องมีปุ่มเปิดปิด layour button 
+ 
+
+
+ปุ่ม ภาพถ่ายดาวเทียม ตำแหน่ง
+
+ 
+
+เมื่อกด พิมพ์ เด้ง form
+
+ 
+
+วันที่ปลูก 000
+
+ 
+
+
 
 

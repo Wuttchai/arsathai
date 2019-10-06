@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "arsathai",
+    "name": "Arsa4Thai",
     "description": "pro1",
     "slug": "snack-rylysZ9RV",
     "privacy": "unlisted",
     "sdkVersion": "33.0.0",
-    "version": "1.0.0",
+    "version": "2.5",
     "orientation": "portrait",
     "primaryColor": "#cccccc",
-    "icon": "./assets/icons/aip_01.png",
+    "icon": "./assets/icons/aip_02.png",
     "loading": {
       "icon": "./assets/icons/aip_01.png",
       "hideExponentText": false
@@ -22,25 +22,35 @@
       ]
     },
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "th.go.deqp.nevt.ARSA4THAI",
+      "supportsTablet": true,
+      "config": {
+      "googleMapsApiKey": "AIzaSyAqk5QMlzfRuUiWCA-ZIGFWVbKCM55tq2E"
+      
+     
+    }  
+  },  "android": { 
+    "versionCode" :5, 
+    "config": {
+      "googleMaps": {
+        "apiKey": "AIzaSyAqk5QMlzfRuUiWCA-ZIGFWVbKCM55tq2E"
+      }
     },
-    "android": {
-      "versionCode": 2.0,
-      "package": "th.go.deqp.deqpnevv2",
-      "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "NSPhotoLibraryUsageDescription",
-        "CAMERA",
-        "MANAGE_DOCUMENTS",
-        "READ_CONTACTS",
-        "USE_FINGERPRINT",
-        "VIBRATE",
-        "WAKE_LOCK",
-        "WRITE_EXTERNAL_STORAGE",
-        "READ_EXTERNAL_STORAGE"
-      ]
-    }
+    "package": "th.go.deqp.deqpnevv2",
+    "permissions": [
+      "ACCESS_COARSE_LOCATION",
+      "ACCESS_FINE_LOCATION",
+      "NSPhotoLibraryUsageDescription",
+      "CAMERA",
+      "MANAGE_DOCUMENTS",
+      "READ_CONTACTS",
+      "USE_FINGERPRINT",
+      "VIBRATE",
+      "WAKE_LOCK",
+      "WRITE_EXTERNAL_STORAGE",
+      "READ_EXTERNAL_STORAGE"
+    ]
     
   }
 }
+} 

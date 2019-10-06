@@ -4,14 +4,14 @@ var colors = ['#1E90FF', '#FF1493', '#32CD32', '#FF8C00', '#4B0082'];
 var selectedColor;
 var colorButtons = {};
 
-function clearSelection() {
+clearSelection() {
   if (selectedShape) {
     selectedShape.setEditable(false);
     selectedShape = null;
   }
 }
 
-function setSelection(shape) {
+setSelection(shape) {
   clearSelection();
   selectedShape = shape;
   shape.setEditable(true);
@@ -22,7 +22,7 @@ function setSelection(shape) {
 
  
 
-function deleteSelectedShape() {
+ deleteSelectedShape() {
   if (selectedShape) {
     selectedShape.setMap(null);
   }
